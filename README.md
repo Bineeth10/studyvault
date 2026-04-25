@@ -172,7 +172,7 @@ The system supports three distinct roles: **Student**, **Faculty**, and **Admin*
 | Layer | Technology |
 |---|---|
 | **Backend** | FastAPI (Python) |
-| **Frontend** | Jinja2 Templates + Vanilla CSS + JavaScript |
+| **Frontend** | Jinja2 Templates, HTML, CSS, JavaScript |
 | **Database** | MongoDB (via `motor` async driver) |
 | **Authentication** | Session-based (`itsdangerous`) + bcrypt password hashing |
 | **AI Provider** | Groq API (`llama-3.1-8b-instant`, `llama-3.3-70b-versatile`) |
