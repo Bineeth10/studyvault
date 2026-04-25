@@ -2,6 +2,7 @@
 # SECTION: Imports
 # Purpose: Import all required libraries and modules
 # =====================================================
+import os
 from pymongo import MongoClient
 from datetime import datetime, timezone
 
@@ -9,8 +10,9 @@ from datetime import datetime, timezone
 # SECTION: Database Connection
 # Purpose: Connect to MongoDB and initialize collections
 # =====================================================
-# MongoDB client initialization (using default local connection)
-client = MongoClient("mongodb://localhost:27017/")
+# MongoDB client initialization (reads MONGO_URL env var, falls back to localhost)
+mongo_url = os.getenv("MONGO_URL", "mongodb://localhost:27017/")
+client = MongoClient(mongo_url)
 db = client["studyvault"]
 
 # Collection definitions for the StudyVault system
