@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎓 StudyVault — Student Module
 
 > A full-stack, production-ready academic notes sharing platform built with **FastAPI**, **MongoDB**, and **AI-powered safety analysis** using the **Groq API (Llama models)**.
@@ -531,3 +532,7 @@ Key highlights for demonstration:
 ---
 
 *Built with ❤️ for academic excellence*
+=======
+# studyvault
+StudyVault – Online Notes Sharing Platform with AI Moderation built using FastAPI, MongoDB, and Groq API for structured data handling and workflow management.
+>>>>>>> 384e8e2dd51959b3dafc8597d44b5905cd043b48
