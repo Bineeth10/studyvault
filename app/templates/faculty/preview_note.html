@@ -1,0 +1,418 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Preview Note{% endblock %}
+{% block page_title %}Preview: {{ note.title }}{% endblock %}
+
+{% block content %}
+<div class="preview-container">
+    <div class="section-card">
+        <div class="note-header-preview">
+            <h2>{{ note.title }}</h2>
+            <div class="note-meta-preview">
+                <span class="subject-tag">{{ note.subject }}</span>
+                <span class="uploader">Uploaded by {{ note.uploader_name }}</span>
+                <span class="date">{{ note.uploaded_at.strftime('%b %d, %Y') if note.uploaded_at else 'Date Unknown'
+                    }}</span>
+                <span class="badge badge-{{ note.status }}">{{ note.status|capitalize }}</span>
+            </div>
+        </div>
+
+        <div class="note-actions-preview" style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+            {% if note.status == 'pending' %}
+            <form action="/faculty/approve/{{ note._id }}" method="POST">
+                <button type="submit" class="btn-primary" style="background: #2ecc71;">Approve Note</button>
+            </form>
+            <form action="/faculty/reject/{{ note._id }}" method="POST">
+                <button type="submit" class="btn-primary" style="background: #ff4757;">Reject Note</button>
+            </form>
+            <button type="button" class="btn-primary" style="background: #e67e22;" data-note-id="{{ note._id }}"
+                data-title="{{ note.title }}" {% if note.ai_detailed_results %}
+                data-ai-results='{{ note.ai_detailed_results | tojson }}' {% endif %}
+                onclick="openPreviewReportModal(this)">
+                Report to Admin
+            </button>
+            {% else %}
+            <div class="review-info-box"
+                style="padding: 10px 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; display: flex; gap: 20px; align-items: center;">
+                <div style="font-size: 1.2rem;">🔒</div>
+                <div>
+                    <p style="margin: 0; font-weight: 600; color: #166534;">Already Reviewed</p>
+                    <p style="margin: 0; font-size: 0.85rem; color: #15803d;">
+                        Status: <strong>{{ note.status|capitalize }}</strong> |
+                        By: {{ note.reviewed_by_name or 'Faculty Member' }} |
+                        {{ (note.reviewed_at or note.approved_at or note.rejected_at).strftime('%b %d, %Y') if
+                        (note.reviewed_at or note.approved_at or note.rejected_at) else '' }}
+                    </p>
+                    {% if note.rejection_reason %}
+                    <p style="margin: 5px 0 0; font-size: 0.85rem; color: #dc2626;">Reason: {{ note.rejection_reason }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <button onclick="window.history.back()" class="btn-primary"
+                style="background: #94a3b8; margin-left: auto;">Back to
+                Approvals</button>
+        </div>
+
+        <!-- AI Safety Analysis Section -->
+        {% if note.ai_detailed_results and note.ai_detailed_results is mapping %}
+        <div class="ai-analysis-section"
+            style="margin-bottom: 25px; padding: 20px; border-radius: 12px; background: #fafafa; border: 1px solid #eee;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    🤖 AI Safety Analysis
+                    {% set risk = note.ai_status %}
+                    {% set r_class = 'risk-safe' %}
+                    {% if note.ai_status == 'Flagged' %}{% set r_class = 'risk-high' %}
+                    {% elif note.ai_status in ['Possible Plagiarism', 'Duplicate Title', 'Scan/Image - Review', 'Review Required', 'AI Error (Review Required)'] %}{% set r_class = 'risk-medium' %}{% endif %}
+                    <span class="risk-badge {{ r_class }}">
+                        {{ risk }}
+                    </span>
+                </h3>
+            </div>
+
+            <div class="violation-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                
+                {% set scores = note.ai_detailed_results.get('violations', note.ai_detailed_results) %}
+                {% for category, info_or_score in scores.items() %}
+                {% if category not in ['overall_risk_level', 'recommended_action'] %}
+                
+                {% set score_val = info_or_score.risk_score if info_or_score is mapping else info_or_score %}
+                {% set is_detected = info_or_score.detected if info_or_score is mapping else (score_val > 0.7) %}
+                {% set short_reason = info_or_score.short_reason if info_or_score is mapping else 'High Risk Detected' %}
+
+                <div class="violation-card {% if is_detected %}detected{% else %}safe{% endif %}"
+                    style="padding: 12px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">{{ category|replace('_', ' ')|title }}</span>
+                        <span class="{% if score_val > 0.7 %}score-danger{% else %}score-normal{% endif %}"
+                            style="font-size: 0.8rem;">
+                            {{ (score_val * 10)|round }} / 10
+                        </span>
+                    </div>
+                    {% if is_detected %}
+                    <p style="margin: 5px 0 0; font-size: 0.8rem; color: #991b1b; line-height: 1.4;">
+                        🔴 {{ short_reason }}
+                    </p>
+                    {% else %}
+                    <p style="margin: 5px 0 0; font-size: 0.8rem; color: #94a3b8;">Safe</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <p style="margin: 15px 0 0; font-size: 0.75rem; color: #94a3b8; text-align: right;">
+                ⚠ AI is advisory. Final decision is faculty responsibility.
+            </p>
+        </div>
+        {% elif note.ai_status == "Scan/Image - Review" %}
+        <div class="ai-analysis-section"
+            style="margin-bottom: 25px; padding: 15px; border-radius: 12px; background: #fffbeb; border: 1px solid #fde68a;">
+            <p style="margin: 0; color: #92400e; display: flex; align-items: center; gap: 10px;">
+                👁️ <strong>Scan/Image Detected:</strong> This document contains heavy images or scanned text.
+                AI analysis was limited. Please review manually for hidden violations.
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="note-preview-content"
+            style="background: var(--card); padding: 20px; border-radius: 10px; min-height: 500px; border: 1px solid #e2e8f0;">
+            {% if file_ext in ['.pdf'] %}
+            <iframe src="/uploads/{{ note.filename }}" width="100%" height="800px" style="border: none;"></iframe>
+
+            {% elif file_ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'] %}
+            <div style="text-align: center;">
+                <img src="/uploads/{{ note.filename }}" alt="{{ note.title }}"
+                    style="max-width: 100%; height: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px;">
+            </div>
+
+            {% elif file_ext in ['.txt', '.md'] %}
+            <div class="text-preview">
+                <iframe src="/uploads/{{ note.filename }}" width="100%" height="600px"
+                    style="border: 1px solid #ddd; padding: 20px;"></iframe>
+            </div>
+
+            {% else %}
+            <div class="no-preview" style="text-align: center; padding: 100px 20px;">
+                <div style="font-size: 80px; margin-bottom: 20px;">📎</div>
+                <h3>Standard Preview Not Available</h3>
+                <p>This file type ({{ file_ext }}) can be viewed by downloading or opening in a new tab.</p>
+                <div style="margin-top: 30px; display: flex; justify-content: center; gap: 20px;">
+                    <a href="/uploads/{{ note.filename }}" target="_blank" class="btn-primary">Open in New Tab</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div id="previewReportModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closePreviewReportModal()">&times;</span>
+        <h2>🚨 Report to Admin</h2>
+        <p style="margin-bottom: 15px; color: var(--muted);">Reporting violation for: <strong id="reportTitle"></strong></p>
+
+        <div id="aiContextBox"
+            style="display: none; background: #fff3cd; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                <strong style="color: #c0392b;">🤖 AI Analysis Recommendation</strong>
+            </div>
+            <p id="aiFlagsText" style="margin: 0; color: #856404; font-size: 0.85rem; font-style: italic;"></p>
+        </div>
+
+        <!-- Decision Guidance -->
+        <div
+            style="background: var(--card); border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem;">
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #475569;">📋 Decision Guidance:</p>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li><strong>Risk > 80%:</strong> Recommended to <strong>Reject</strong> or <strong>Report</strong>.</li>
+                <li><strong>Risk 50-80%:</strong> Requires careful <strong>Manual Review</strong>.</li>
+                <li><strong>Safe:</strong> Usually safe to <strong>Approve</strong>.</li>
+            </ul>
+        </div>
+
+        <form id="previewReportForm" onsubmit="submitPreviewReport(event)">
+            <input type="hidden" id="reportItemId" name="item_id" value="{{ note._id }}">
+            <input type="hidden" id="reportItemType" name="item_type" value="note">
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 5px;">Violation Category*</label>
+                <select id="violationSelect" name="reason" required
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="PLAGIARISM">Plagiarism Detected</option>
+                    <option value="COPYRIGHT_VIOLATION">Copyright Violation</option>
+                    <option value="INAPPROPRIATE_CONTENT">Inappropriate / Offensive Content</option>
+                    <option value="ACADEMIC_MISCONDUCT">Academic Misconduct</option>
+                    <option value="SPAM_LOW_QUALITY">Repeated Spam / Junk</option>
+                    <option value="MALICIOUS_CONTENT">Malicious Content</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label style="font-weight: 600; display: block; margin-bottom: 5px;">Evidence & Details*</label>
+                <textarea id="reportDescription" name="description" rows="4" required
+                    placeholder="Describe the violation in detail..."
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+            </div>
+
+            <p style="font-size: 0.75rem; color: #94a3b8; margin: 15px 0; text-align: center;">
+                ⚠ AI is advisory. Final decision is faculty responsibility.
+            </p>
+
+            <button type="submit" class="btn-primary"
+                style="margin-top: 5px; background: #d35400; width: 100%; padding: 12px;">Submit Report</button>
+        </form>
+    </div>
+</div>
+
+<!-- Toast for feedback -->
+<div id="previewToast"
+    style="visibility: hidden; min-width: 250px; background-color: var(--text); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1001; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 17px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <span id="previewToastMessage"></span>
+</div>
+
+<style>
+    .note-meta-preview {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+        align-items: center;
+    }
+
+    .note-meta-preview span {
+        padding: 4px 12px;
+        background: #f1f5f9;
+        border-radius: 15px;
+        font-size: 13px;
+    }
+
+    .subject-tag {
+        background: #11998e !important;
+        color: white !important;
+    }
+
+    .risk-badge {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    .risk-high {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .risk-medium {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .risk-safe {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .violation-card.detected {
+        background: #fff1f1;
+        border: 1px solid #fca5a5 !important;
+    }
+
+    .violation-card.safe {
+        background: var(--card);
+        border: 1px solid #e2e8f0;
+    }
+
+    .score-danger {
+        color: #dc2626 !important;
+    }
+
+    .score-normal {
+        color: #64748b;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--muted);
+    }
+
+    .modal-content {
+        background: var(--card);
+        margin: 10% auto;
+        padding: 25px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .close-modal {
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+        transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+    }
+</style>
+
+<script>
+    const reportModal = document.getElementById('previewReportModal');
+
+    function openPreviewReportModal(btn) {
+        const title = btn.getAttribute('data-title');
+        const resultsJson = btn.getAttribute('data-ai-results');
+
+        document.getElementById('reportTitle').textContent = title;
+
+        if (resultsJson) {
+            try {
+                const results = JSON.parse(resultsJson);
+                // Handle both nested .violations and flat dictionaries safely
+                const violations = results.violations || results;
+
+                // Find highest risk violation
+                let topCat = null;
+                let topScore = 0;
+                let topReason = "";
+
+                for (const [cat, info] of Object.entries(violations)) {
+                    if (cat === 'overall_risk_level' || cat === 'recommended_action') continue;
+
+                    let score = (typeof info === 'object') ? info.risk_score : info;
+                    let detected = (typeof info === 'object') ? info.detected : (score > 0.7);
+                    let reason = (typeof info === 'object') ? info.short_reason : 'High Risk';
+
+                    if (detected || score > topScore) {
+                        topScore = score;
+                        topCat = cat;
+                        topReason = reason;
+                        if (detected) break; // Priority to detected flag
+                    }
+                }
+
+                if (topCat) {
+                    const dropdown = document.getElementById('violationSelect');
+                    dropdown.value = topCat;
+
+                    document.getElementById('aiContextBox').style.display = 'block';
+                    document.getElementById('aiFlagsText').innerHTML = `<strong>${topCat.replace(/_/g, ' ')}</strong> - ${topReason} (${Math.round(topScore * 100)}% Risk)`;
+
+                    document.getElementById('reportDescription').value = `AI Flagged: ${topReason}`;
+                }
+            } catch (e) {
+                console.error("Error parsing AI results", e);
+            }
+        }
+
+        reportModal.style.display = 'block';
+    }
+
+    function closePreviewReportModal() {
+        reportModal.style.display = 'none';
+    }
+
+    function showPreviewToast(message, type = 'success') {
+        const toast = document.getElementById('previewToast');
+        const toastMsg = document.getElementById('previewToastMessage');
+        toastMsg.textContent = message;
+        toast.style.backgroundColor = type === 'success' ? '#2ecc71' : '#e74c3c';
+        toast.style.visibility = 'visible';
+        setTimeout(() => {
+            toast.style.visibility = 'hidden';
+        }, 3000);
+    }
+
+    async function submitPreviewReport(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/report/create', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                showPreviewToast('Report submitted successfully!', 'success');
+                closePreviewReportModal();
+                // Optionally redirect
+                setTimeout(() => window.location.href = '/faculty/approvals?success=Report submitted', 1500);
+            } else {
+                showPreviewToast(result.error || 'Failed to submit report', 'error');
+            }
+        } catch (e) {
+            showPreviewToast('Network error', 'error');
+        }
+    }
+
+    window.onclick = function (event) {
+        if (event.target == reportModal) closePreviewReportModal();
+    }
+</script>
+{% endblock %}

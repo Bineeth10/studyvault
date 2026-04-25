@@ -1,0 +1,766 @@
+# STUDYVAULT: ONLINE NOTES SHARING PLATFORM
+## BCA Final Year Project Report
+
+---
+
+**Student Name:** Bineeth Baby  
+**Register Number:** 230021085633  
+**College:** St. George's College, Aruvithura  
+**Programme:** Bachelor of Computer Applications (BCA)  
+**Technology Stack:** FastAPI · MongoDB · Jinja2 · Groq AI (Llama 3.1)
+
+---
+
+---
+
+# CHAPTER 1: INTRODUCTION
+
+## 1.1 Background
+
+The rapid expansion of digital education has fundamentally changed how students interact with academic content. Traditional approaches to sharing study material — photocopies, WhatsApp forwards, scattered email attachments — lack structure, accountability, and quality control. In academic institutions where subjects span multiple semesters and faculty oversee large student groups, there is a growing need for a centralized, organized, and verifiable system for distributing study notes.
+
+The proliferation of smartphones and internet access has made it practical to build such platforms as web applications, accessible from any device with a browser. However, most available platforms are generic file-sharing tools that do not account for academic-specific needs such as faculty review, role-based access, or the monitoring of content quality. This gap in the market motivates the development of a purpose-built academic notes-sharing system.
+
+StudyVault was conceived to fill this gap by providing a structured digital environment where students can upload their study notes, faculty can review and approve them, and admins can maintain oversight of the entire platform — all in one cohesive system.
+
+## 1.2 Problem Statement
+
+Students in academic institutions face several recurring problems with access to quality study material:
+
+- Notes are shared through informal channels with no quality verification.
+- There is no mechanism to ensure that shared content is accurate, appropriate, or academically sound.
+- Faculty have no oversight of student-generated content being circulated among peers.
+- Students who miss classes have no reliable platform to access peer-reviewed notes.
+- AI-generated or plagiarized content can easily be passed off as original notes.
+
+These problems result in the distribution of unreliable, low-quality, or even inappropriate academic content, which ultimately harms the educational process.
+
+## 1.3 Need for the Proposed System
+
+StudyVault addresses the above problems by introducing a structured, role-based workflow for academic notes sharing. The need for such a system is clear:
+
+- **Quality Assurance:** Only faculty-approved notes are made publicly accessible to students.
+- **AI Safety Screening:** Every uploaded note is automatically analysed by an AI model for plagiarism, inappropriate content, spam, and academic misconduct before human review begins.
+- **Role Separation:** Students, faculty, and administrators each have clearly defined access rights and responsibilities.
+- **Centralized Access:** All approved notes are browsable and downloadable from a single platform.
+- **Communication and Community:** Built-in messaging, a discussion forum, and notifications keep all users connected.
+
+## 1.4 Objectives of the Project
+
+The objectives of StudyVault are:
+
+1. To build a secure, role-based web platform on which students can upload study notes and faculty can review and publish them.
+2. To integrate AI-driven content analysis (using the Groq API with Llama 3.1-8B) to automatically flag inappropriate, plagiarised, or low-quality content before faculty review.
+3. To implement a session-based authentication system that enforces strict role separation between students, faculty, and administrators.
+4. To provide a notification system that keeps all users informed about the status of their notes, messages, and system events in real time.
+5. To build a discussion forum and private messaging system to support academic collaboration.
+6. To give administrators complete oversight of users, notes, reports, announcements, and system configuration from a single admin dashboard.
+
+## 1.5 Scope of the System
+
+StudyVault is scoped as a single-institution academic notes platform. The system covers:
+
+- **User Management:** Registration and login for three roles — Student, Faculty, and Admin.
+- **Notes Lifecycle:** Upload, AI safety check, faculty review (Approve / Reject / Return), publication, browsing, and download.
+- **Communication:** Private messaging between all users, a faculty-to-student announcement system, and a community discussion forum.
+- **AI Tools:** AI summary generation, flashcard creation, Q&A answers, and study guide generation for students via the Groq API.
+- **Administrative Control:** User activation/deactivation, content moderation, platform settings configuration, and report management.
+
+The system does not currently include real-time chat (WebSocket), video content, or integration with external Learning Management Systems (LMS).
+
+## 1.6 Major Features of the System
+
+| Feature | Description |
+|---|---|
+| Role-Based Login | Separate portals for Student, Faculty, and Admin with role-enforced session checks |
+| Notes Upload | Multi-file upload with drag-and-drop support; subject and title tagging |
+| AI Safety Analysis | Automatic content scanning using Groq Llama 3.1-8B for 6 violation categories |
+| Faculty Review Workflow | Notes can be Approved, Rejected, or Returned with feedback |
+| Browse and Download | Approved notes are searchable and downloadable by all students |
+| Favorites | Students can save and manage a personal library of notes |
+| Notifications | Real-time badge-count notifications for all events (uploads, approvals, messages) |
+| Private Messaging | Direct messaging between students, faculty, and admins |
+| Discussion Forum | Community Q&A board with thread support |
+| AI Study Tools | Summariser, Flashcard Generator, Q&A Bot, and Study Guide Generator |
+| Admin Dashboard | Analytics, faculty performance, moderation queue, and system settings |
+| Content Reporting | Students or faculty can report notes; admin resolves reports |
+
+## 1.7 Overview of Report Organisation
+
+This report is organised as follows: Chapter 2 reviews existing systems and their limitations. Chapter 3 covers the complete system design (architecture, modules, database, DFDs, use case) and the implementation details. Chapter 4 presents the testing strategy and test cases. Chapter 5 showcases the results and achieved objectives. Chapter 6 concludes with contributions, limitations, and future scope.
+
+---
+
+---
+
+# CHAPTER 2: RELATED WORK
+
+## 2.1 Overview of Existing Systems
+
+Several platforms exist that partially address the need for academic notes sharing. A review of three major systems is presented below.
+
+### 2.1.1 Google Drive / Google Classroom
+
+Google Drive allows users to upload and share files with others via shared folders. Google Classroom adds a layer of organisation by letting teachers create "classrooms" and post resources. However, both are general-purpose tools not specifically designed for academic notes management.
+
+**Limitations:**
+- No workflow for faculty to approve student-uploaded content before it is visible to peers.
+- No built-in AI analysis of uploaded content for safety or quality.
+- No role-based portal — student and faculty dashboards are not meaningfully different.
+- No notification system for specific events like note approval or rejection.
+- Students can share anything without any accountability mechanism.
+
+### 2.1.2 Scribd / SlideShare
+
+Scribd and SlideShare are document publishing platforms where users can upload PDFs and presentations for public viewing. They are widely used for sharing study material.
+
+**Limitations:**
+- No faculty review mechanism; content is published immediately upon upload.
+- No institution-specific access control; notes are visible to the entire internet.
+- No AI safety scanning specific to academic integrity.
+- No role-based system (student vs. faculty vs. admin).
+- No messaging, forum, or notification features integrated into the platform.
+
+### 2.1.3 Moodle (Open Source LMS)
+
+Moodle is a full-featured Learning Management System used by many universities. It supports course creation, file sharing, assignments, forums, and messaging.
+
+**Limitations:**
+- Extremely complex to set up and configure; requires dedicated server administration.
+- The notes-sharing workflow is not the primary focus; it is embedded within a broader course management context.
+- Approvals for notes must be configured manually per course and are not automatic.
+- No integrated AI content analysis for automatic pre-screening.
+- High learning curve for both faculty and students.
+
+## 2.2 Comparison of Existing Systems vs. StudyVault
+
+| Feature | Google Drive | Scribd | Moodle | StudyVault |
+|---|---|---|---|---|
+| Faculty Approval Workflow | No | No | Partial | Full Workflow |
+| AI Safety Analysis | No | No | No | Groq Llama 3.1 |
+| Role-Based Authentication | No | No | Yes | Yes |
+| Subject-Based Filtering | No | Limited | Yes | Yes |
+| Built-in Messaging | No | No | Yes | Yes |
+| Discussion Forum | No | No | Yes | Yes |
+| Notification System | Partial | No | Yes | Yes |
+| AI Study Tools | No | No | No | Yes (Summary, Flashcards, QnA) |
+| Setup Complexity | Low | Low | High | Low |
+| Institutional Focus | No | No | Yes | Yes |
+
+## 2.3 How StudyVault Improves Upon Existing Systems
+
+StudyVault combines the simplicity of a file-sharing tool with the structured workflow of an LMS, while adding an AI-powered safety layer not present in any of the reviewed systems. Key improvements are:
+
+1. **Automated AI Pre-Screening:** Every note is scanned using an AI model before faculty see it, which reduces manual effort and ensures only safe content reaches the review stage.
+2. **Complete Notes Lifecycle Management:** The system tracks each note from upload through AI analysis, faculty decision, and final publication — no other reviewed system does this end-to-end.
+3. **Faculty-Subject Binding:** Faculty members only see notes in subjects they are assigned to, which mirrors the real-world academic workflow.
+4. **Integrated AI Study Tools:** Students can generate summaries, flashcards, and study guides from notes using the same Groq API, a feature absent from all reviewed platforms.
+5. **Low Complexity, Institutional Focus:** Unlike Moodle, StudyVault is easy to deploy (Python + MongoDB) and is purposefully designed for a single institution's notes workflow.
+
+---
+
+---
+
+# CHAPTER 3: DESIGN AND IMPLEMENTATION
+
+## PART A: SYSTEM DESIGN
+
+### 3.1 System Architecture
+
+StudyVault follows a layered web application architecture with four primary layers.
+
+**1. Client Layer**
+The user interacts with the system through a standard web browser (Chrome, Firefox, Edge). All three roles — Student, Faculty, and Admin — access role-specific pages rendered by Jinja2 templates. JavaScript handles client-side interactivity such as AJAX requests for note approval actions and AI tool invocations.
+
+**2. Application Layer**
+The core of the system is a FastAPI application served by a Uvicorn ASGI server. The application is divided into modular routers: [auth.py](file:///C:/Users/Lenovo/studyvault/app/routes/auth.py) handles registration, login, logout, and role selection; [student.py](file:///C:/Users/Lenovo/studyvault/app/routes/student.py) manages the dashboard, upload, browse, favorites, AI tools, messaging, and forum; [faculty.py](file:///C:/Users/Lenovo/studyvault/app/routes/faculty.py) handles approvals, preview, announcements, and messaging; [admin.py](file:///C:/Users/Lenovo/studyvault/create_admin.py) controls user management, note moderation, reports, and settings; [reports.py](file:///C:/Users/Lenovo/studyvault/app/routes/reports.py) handles content reporting by users. A custom [NotificationMiddleware](file:///C:/Users/Lenovo/studyvault/app/main.py#37-71) intercepts every request to fetch unread notification counts and populates the session context before the view renders, so the notification bell is always accurate.
+
+**3. AI Layer**
+The Groq API using the `llama-3.1-8b-instant` model provides two types of intelligence. Safety Analysis runs at upload time and returns a structured JSON report scoring content on six categories: plagiarism, academic misconduct, copyright violation, spam, inappropriate content, and malicious content. Study Tools provide summarisation, flashcard generation, Q&A, and study guide generation for students on-demand. Text extraction is handled before passing content to the AI using PyPDF2 for PDFs, pytesseract for images, and python-docx or python-pptx for office documents.
+
+**4. Data Layer**
+MongoDB stores all application data in the `studyvault` database via PyMongo. Uploaded files are stored in the local `uploads/` directory and served via a static file mount at `/uploads`.
+
+*Refer to architecture.png for the system architecture diagram.*
+
+---
+
+### 3.2 Module Identification and Description
+
+| Module | File | Key Responsibilities |
+|---|---|---|
+| Authentication Module | auth.py | Role selection, registration with bcrypt hashing, login with constant-time verification, session management, logout |
+| Student Module | student.py | Dashboard, multi-file upload, AI safety trigger, browse, preview, download, favorites, messaging, forum, AI tools, notifications, announcements |
+| Faculty Module | faculty.py | Approval queue, approve/reject/return notes, preview, manage own notes, announcements, messaging, forum, notifications |
+| Admin Module | admin.py | User management, note moderation, report resolution, announcements, messaging, system settings, danger zone, analytics dashboard |
+| Reports Module | reports.py | Content reporting by any user; triggers notification to admin and flags content for investigation |
+| Database Module | database.py | MongoDB connection, collection references, index creation, notification utility function, subject backfill |
+| Notification Middleware | main.py | Intercepts every request to attach unread notification count to request state |
+
+---
+
+### 3.3 Data Flow Diagram — Level 0 (Context Diagram)
+
+The system has three external entities: Student, Faculty, and Admin. The central process is the StudyVault Platform.
+
+Key data flows from Student to System include login credentials, uploaded note files, messages, forum posts, AI queries, and content reports. Flows from System to Student include approved notes, notifications for approval/rejection/messages, AI-generated content, and downloadable files.
+
+Flows from Faculty to System include login credentials and review decisions (Approve, Reject, or Return with reason), announcements, and messages. Flows from System to Faculty include notes pending review, AI safety reports, and notifications.
+
+Flows from Admin to System include login credentials, user management actions, system settings changes, and report resolutions. Flows from System to Admin include user lists, platform analytics, content reports, and notification of new filed reports.
+
+*Refer to dfd_level0.png for the Level 0 DFD.*
+
+---
+
+### 3.4 Data Flow Diagram — Level 1
+
+The internal processes of StudyVault are:
+
+**Process 1.0 - User Authentication:** Validates credentials against the `users` collection; checks role, active status, and creates session data.
+
+**Process 2.0 - Notes Upload:** Receives file and metadata from the student; saves file to `uploads/`; stores note record in `notes` collection with `status: pending`.
+
+**Process 3.0 - AI Safety Analysis:** Extracts text from the uploaded file; sends to Groq API; stores the structured safety JSON (scores, overall verdict) in the note record.
+
+**Process 4.0 - Faculty Verification:** Faculty updates note status to approved, rejected, or returned; triggers notification to the student uploader.
+
+**Process 5.0 - Notes Management:** Admin or faculty CRUD operations on notes; status overrides; subject filtering.
+
+**Process 6.0 - Notification System:** Every key event calls `create_notification()`; middleware reads counts on every page load and attaches to the request state.
+
+Data stores: D1 Users Collection (authentication, role lookup), D2 Notes Collection (notes lifecycle, AI results, status tracking), D3 Notifications Collection (per-user notification feed), D4 Messages Collection (private messaging threads).
+
+*Refer to dfd_level1.png for the Level 1 DFD.*
+
+---
+
+### 3.5 Use Case Diagram
+
+The system has three actors, each with distinct use cases.
+
+**Student use cases:** Register, Login, Upload Notes, View My Notes Status, Browse Approved Notes, Download Notes, Save/Unsave Favorites, Receive Notifications, Send Messages, Participate in Forum, Use AI Tools, View Announcements, Report Content.
+
+**Faculty use cases:** Login, View Pending Approvals, Approve Note, Reject Note with reason, Return Note for Correction, Preview Note File, Upload Own Notes (auto-approved), Post Announcements, Message Students, View Forum, View AI Safety Report, Manage Own Notes.
+
+**Admin use cases:** Login, Manage All Users (activate/deactivate/delete), Manage All Notes (approve/reject/warn/delete), View and Resolve Content Reports, Create/Delete Announcements, Send Messages (individual or broadcast), Configure System Settings, View Analytics Dashboard.
+
+*Refer to usecase.png for the Use Case Diagram.*
+
+---
+
+### 3.6 Database Schema
+
+StudyVault uses MongoDB with the database named `studyvault` containing the following collections:
+
+#### Collection: users
+```
+_id                  : ObjectId (Primary Key)
+name                 : String
+email                : String (unique index)
+password             : String (bcrypt hash)
+role                 : String  (student / faculty / admin)
+subjects             : Array of Strings (faculty only)
+years_of_experience  : Integer (faculty only)
+custom_subject       : String (when "Other" is selected by faculty)
+is_active            : Boolean (default true)
+is_deleted           : Boolean (soft delete flag)
+profile_complete     : Boolean
+created_at           : DateTime
+```
+
+#### Collection: notes
+```
+_id                  : ObjectId (Primary Key)
+title                : String
+subject              : String
+uploader_id          : String (references users._id)
+uploader_name        : String
+uploader_role        : String (student / faculty)
+filename             : String (unique saved filename)
+original_filename    : String
+file_path            : String (local file path)
+status               : String (pending / approved / rejected / returned / admin_review / Reported / archived)
+uploaded_at          : DateTime
+reviewed_by          : String (references users._id)
+reviewed_by_name     : String
+reviewed_at          : DateTime
+approved_at          : DateTime
+rejected_at          : DateTime
+rejection_reason     : String
+ai_status            : String (Safe / Flagged)
+ai_violation_type    : String
+ai_flag_reason       : String
+ai_detailed_results  : Object (plagiarism, academic_misconduct, copyright_violation, spam_low_quality, inappropriate_content, malicious_content scores 0-10)
+```
+
+#### Collection: favorites
+```
+_id        : ObjectId (Primary Key)
+user_id    : String (references users._id)
+note_id    : String (references notes._id)
+created_at : DateTime
+Composite unique index on (user_id, note_id)
+```
+
+#### Collection: notifications
+```
+_id          : ObjectId (Primary Key)
+user_id      : String (references users._id)
+type         : String (UPLOAD / APPROVAL / REJECTION / MESSAGE / REPORT, etc.)
+title        : String
+message      : String
+reference_id : String (optional reference to related document)
+is_read      : Boolean
+created_at   : DateTime
+```
+
+#### Collection: messages
+```
+_id           : ObjectId (Primary Key)
+sender_id     : String (references users._id)
+sender_name   : String
+receiver_id   : String (references users._id)
+receiver_name : String
+subject       : String
+message       : String
+is_read       : Boolean
+created_at    : DateTime
+```
+
+#### Collection: forum_posts
+```
+_id         : ObjectId (Primary Key)
+title       : String
+subject     : String
+content     : String
+author_id   : String (references users._id)
+author_name : String
+replies     : Array of Objects
+created_at  : DateTime
+```
+
+#### Collection: announcements
+```
+_id          : ObjectId (Primary Key)
+faculty_id   : String (references users._id)
+faculty_name : String
+title        : String
+message      : String
+priority     : String (general / urgent / info)
+audience     : String (all / student / faculty)
+created_at   : DateTime
+```
+
+#### Collection: reports
+```
+_id               : ObjectId (Primary Key)
+reporter_id       : String (references users._id)
+reporter_role     : String
+reported_item_id  : String (references notes._id)
+item_type         : String
+reason            : String
+description       : String
+status            : String (Open / Under Review / Resolved)
+resolution        : String
+resolved_by       : String (references users._id)
+resolved_at       : DateTime
+created_at        : DateTime
+```
+
+#### Collection: system_settings
+```
+registrations_enabled : Boolean
+ai_enabled            : Boolean
+max_upload_size       : Integer (in MB)
+allowed_file_types    : String (comma-separated, e.g. "pdf,docx,jpg")
+updated_at            : DateTime
+```
+
+#### Collection: subjects
+```
+_id        : ObjectId (Primary Key)
+name       : String (unique)
+created_at : DateTime
+```
+
+*Refer to database.png for the visual database design diagram.*
+
+---
+
+### 3.7 System Workflow Description
+
+The primary workflow of StudyVault follows a linear-with-branching review process.
+
+**Step 1 - Registration / Login:** A new user navigates to `/roles`, selects their role (Student/Faculty/Admin), and registers or logs in. The system validates credentials using `bcrypt.verify()` with constant-time comparison against a dummy hash even if the user does not exist, preventing timing attacks. Session data including user ID, name, role, and email is stored server-side by the Starlette SessionMiddleware.
+
+**Step 2 - Note Upload (Student):** A student navigates to `/student/upload` and selects one or multiple files. On form submission, each file's extension is checked against the admin-configured allowed file types from `system_settings_collection`. Valid files are saved to `uploads/` with a unique filename. Text is extracted from the file using the appropriate library. The extracted text is sent to the Groq API via `groq_safety_analysis()`, which returns scores for six categories. The note is stored in MongoDB with `status: "pending"` and the full AI report embedded in the document.
+
+**Step 3 - Faculty Review:** A faculty member at `/faculty/approvals` sees all pending notes in the subjects they are assigned to. They can preview the file in-browser. For each note they can Approve (note becomes visible in Browse), Reject (with a mandatory textual reason, student is notified), or Return (student receives correction request and can re-upload).
+
+**Step 4 - Note Publication:** Approved notes appear in `/student/browse`, searchable and filterable by subject. Students can download any approved note or save it to their Favorites.
+
+**Step 5 - Admin Oversight:** The admin dashboard provides real-time platform metrics (total users, notes by status, chart of uploads per day, faculty analytics). Admins can override any note's status, deactivate or soft-delete users, manage all announcements, and configure platform settings.
+
+*Refer to workflow.png for the complete workflow flowchart.*
+
+---
+
+## PART B: IMPLEMENTATION
+
+### 3.8 Development Environment and Tools
+
+| Tool / Technology | Version | Purpose |
+|---|---|---|
+| Python | 3.11 | Primary backend programming language |
+| FastAPI | 0.104.1 | ASGI web framework for all HTTP routes |
+| Uvicorn | 0.24.0 | ASGI server for running the FastAPI application |
+| MongoDB | 7.x Community | NoSQL document database |
+| PyMongo | 4.6.0 | Python driver for MongoDB |
+| Jinja2 | 3.1.2 | Server-side HTML templating engine |
+| python-multipart | 0.0.6 | Form data and file upload parsing |
+| Passlib + bcrypt | 1.7.4 / 4.1.1 | Secure password hashing |
+| Starlette | 0.27.0 | Session middleware and ASGI toolkit |
+| Groq | 0.3.0 | API client for Llama AI models |
+| PyPDF2 | 3.0.1 | PDF text extraction |
+| Pillow | 10.1.0 | Image processing |
+| pytesseract | 0.3.10 | OCR text extraction from images |
+| python-docx | 1.1.0 | Text extraction from Microsoft Word files |
+| python-pptx | 0.6.21 | Text extraction from PowerPoint files |
+| python-dotenv | 1.0.0 | Loading environment variables from .env file |
+| VS Code | -- | Code editor |
+| Postman | -- | API endpoint testing |
+| Git | -- | Version control |
+
+### 3.9 Technologies Used with Justification
+
+**FastAPI** was chosen over Flask because it provides automatic OpenAPI documentation, built-in request validation via Pydantic, native async support, and superior performance via Uvicorn/Starlette. For an ASGI platform with middleware stacking requirements (session middleware + notification middleware), FastAPI provides the most appropriate architecture.
+
+**MongoDB** was chosen over a relational database because the notes schema naturally varies — different notes have different AI fields and different metadata. MongoDB's document model handles this schema flexibility without requiring migrations. The atomic `update_one()` with preconditions (e.g., `{status: "pending"}`) prevents race conditions during concurrent approvals.
+
+**Groq API (Llama 3.1-8B-Instant)** was chosen for AI integration because of its extremely fast inference time. The "instant" model responds in well under two seconds, which is critical for a synchronous upload workflow. The model supports structured JSON output via `response_format: {type: "json_object"}`, making the safety analysis result deterministic and parseable without brittle string manipulation.
+
+**Jinja2 Templates** were used for the frontend instead of a JavaScript framework because the application is document-centric and server-rendered HTML is simpler to develop, debug, and deploy. JavaScript is used selectively for dynamic interactions such as AJAX approval actions, AI tool requests, and theme toggling.
+
+### 3.10 Description of Major Modules Implemented
+
+#### 3.10.1 Authentication Module (auth.py)
+
+The authentication system implements a role-based session mechanism. The `/roles` page allows the user to select their intended role, which is stored in the session. When a user logs in, the server verifies not only the password but also that the login portal matches the user's actual role in the database — a user registered as "faculty" cannot log in through the "student" portal, even with valid credentials.
+
+Password security uses `passlib.hash.bcrypt` with a cost factor of 12. A dummy hash verification is performed even when the user does not exist in the database, preventing timing side-channel attacks that could reveal valid email addresses. Session data stored includes: user.id, user.name, user.email, and user.role.
+
+Registration for faculty includes additional fields: assigned subjects from a dynamic dropdown populated from the `subjects` collection, custom subject support for an "Other" option, and years of experience. When a new faculty subject is added, it is automatically upserted into the `subjects` collection.
+
+#### 3.10.2 Student Module (student.py)
+
+The student module is the largest module (738 lines) and handles the full student experience.
+
+**Multi-file Upload:** The `upload_notes()` route accepts a list of `UploadFile` objects. Before saving, it checks each file's extension against the system-configured allowed file types. Files with disallowed extensions are silently skipped. Each valid file is saved with a unique filename constructed as `user_id_timestamp_originalname` and then processed by the AI pipeline.
+
+**AI Pipeline:** `extract_text_from_pdf()` uses PyPDF2 to read paginated text capped at 3000 characters. `extract_text_from_image()` invokes Tesseract OCR via pytesseract. `extract_text_from_office()` handles both .docx (python-docx) and .pptx (python-pptx). Extracted text is passed to `groq_safety_analysis()`, which sends a structured prompt to the Groq API and parses the JSON response containing six numerical scores and an overall verdict (Safe or Flagged). All AI processing uses `asyncio.to_thread()` to prevent the async event loop from being blocked by CPU-intensive extraction or external API calls.
+
+**Browse and Download:** The `/student/browse` endpoint fetches all notes with `status: "approved"` and renders them alongside the student's favorites list so the heart icon reflects the saved state on page load.
+
+**Favorites:** `toggle_favorite()` is an idempotent endpoint. If the `(user_id, note_id)` pair exists it is deleted (unsave); if not, it is inserted (save). A composite unique index in MongoDB prevents duplicate favorites regardless of race conditions.
+
+**AI Study Tools:** The `/student/ai/process` endpoint accepts a `tool_type` (summary, flashcards, questions, guide) and `input_text`. Each tool type maps to a different system prompt sent to the Groq API. Flashcards use JSON mode to guarantee parseable output. If the API key is missing, a graceful demo fallback response is returned.
+
+#### 3.10.3 Faculty Module (faculty.py)
+
+The faculty module implements the core review workflow.
+
+**Approval Queue:** `approvals_page()` queries notes where `status` matches the selected tab and `subject` is in the faculty's assigned subjects list. This subject-binding ensures faculty only see relevant content, enforced server-side at the database query level.
+
+**Approve, Reject, and Return:** Each action uses an atomic `update_one()` with a precondition (`status: "pending"`) ensuring a note cannot be double-processed in concurrent requests. After a successful update, a notification is sent to the student via `create_notification()`.
+
+**Faculty Uploads:** Faculty can upload their own notes, which bypass the AI safety check and review stage and are directly set to `status: "approved"`, reflecting the trust hierarchy of the institution.
+
+**Review Time Analytics:** The dashboard computes average, fastest, and slowest review times from the difference between `reviewed_at` and `uploaded_at` across all completed reviews by the faculty member.
+
+#### 3.10.4 Admin Module (admin.py)
+
+**Workload Monitoring:** On every admin dashboard load, `run_workload_checks()` scans for notes pending longer than 24 hours (sends a reminder to the responsible faculty) or longer than 48 hours (sends an escalation alert).
+
+**User Management:** Admins can activate/deactivate users and perform soft-deletes (setting `is_deleted: True` and `is_active: False`). A cleanup route permanently removes soft-deleted users. Passwords are excluded from all user queries using MongoDB projection `{"password": 0}`.
+
+**Note Moderation:** Admins can approve, reject, return, warn, delete, or archive any note. Mass-archiving and mass-restoration are available in a Danger Zone gated behind a multi-factor confirmation requiring a typed keyword plus admin password re-entry.
+
+**System Settings:** The `system_settings` collection stores `registrations_enabled`, `ai_enabled`, `max_upload_size`, and `allowed_file_types`. These are read at runtime in auth.py and student.py to enforce policies without code changes.
+
+#### 3.10.5 Notification System
+
+Every significant event calls `create_notification(user_id, type, title, message, reference_id)` defined in `database.py`, which inserts a document into `notifications_collection`. The `NotificationMiddleware` in `main.py` intercepts every HTTP request and, if the session contains a logged-in user, counts unread notifications and attaches the count to `request.state.unread_count`, which appears as a badge on the bell icon in all dashboard layouts.
+
+### 3.11 Key Implementation Decisions
+
+1. **Async Thread Pool for AI Calls:** AI API calls and text extraction are blocking operations. Using `await asyncio.to_thread(fn, arg)` wraps them in a thread pool, preserving FastAPI's async event loop responsiveness even during slow AI responses.
+
+2. **Constant-Time Login:** Using `bcrypt.verify()` on a dummy hash when the user email does not exist ensures that an attacker cannot determine valid emails by measuring response times.
+
+3. **Faculty Subject Binding:** Faculty only see notes in their assigned subjects. This is enforced server-side in the database query, not just on the frontend display.
+
+4. **Atomic Note Status Updates:** All note status transitions use `update_one({_id: oid, status: "pending"}, ...)`. The `status: "pending"` precondition acts as an optimistic lock, ensuring a note can only be approved or rejected once.
+
+5. **Composite Unique Index on Favorites:** The `(user_id, note_id)` composite unique index in MongoDB prevents duplicate favorite entries at the database level, independent of application-level checks.
+
+6. **Modular Router Architecture:** Each role has its own `APIRouter` with a URL prefix. This separates concerns cleanly and allows each module to be read, tested, and modified independently.
+
+### 3.12 Challenges Faced and Solutions Adopted
+
+| Challenge | Solution |
+|---|---|
+| AI response not always valid JSON | Used `response_format: {type: "json_object"}` in Groq call; wrapped `json.loads()` in try-except with a safe fallback dictionary |
+| Blocking AI calls in async FastAPI | Used `asyncio.to_thread()` to offload blocking I/O and CPU work to a thread pool |
+| Faculty seeing notes outside their subjects | Enforced `subject: {$in: faculty_subjects}` filter on every approval query |
+| Duplicate favorite entries on rapid clicking | Added composite unique index; made `toggle_favorite()` idempotent |
+| Notification count being stale on page load | Moved count computation to middleware; runs on every request automatically |
+| Faculty double-approval via rapid requests | Added atomic precondition `{status: "pending"}` to all note status update queries |
+
+---
+
+---
+
+# CHAPTER 4: TESTING
+
+## 4.1 Testing Approach
+
+Testing was performed manually in three phases. First, individual routes and functions were tested independently using direct browser access and Postman for POST endpoints. Second, each feature was tested end-to-end through the browser interface with all three user roles. Third, input forms were tested with missing, invalid, and boundary-case values. Error responses and edge cases were validated by checking browser output, server console logs, and MongoDB collection states.
+
+## 4.2 Types of Testing Performed
+
+- **Functional Testing:** Each feature was verified to function as specified — upload, approve, reject, download, message, notify.
+- **Validation Testing:** Form inputs were tested for required field enforcement, type mismatches, and out-of-range values.
+- **Security Testing:** Role cross-login, unauthorized route access, and timing attack resistance were tested.
+- **Module Testing:** Each router module (auth, student, faculty, admin, reports) was tested in isolation with specific inputs and expected outputs.
+- **Boundary Testing:** File type enforcement with allowed and disallowed extensions; empty file submissions; very large inputs to AI text processing.
+
+## 4.3 Test Cases
+
+### Authentication Module
+
+| TC | Test Case | Input | Expected Output | Actual Output | Status |
+|---|---|---|---|---|---|
+| TC01 | Student registration with valid data | Valid name, email, password, role=student | Success message, redirected to login | Redirect to login with success | Pass |
+| TC02 | Login with wrong password | Valid email, wrong password | "Invalid email or password" error | Error displayed correctly | Pass |
+| TC03 | Student logging in via Faculty portal | Valid student credentials on faculty portal | "Invalid email or password" | Login failed with correct message | Pass |
+| TC04 | Duplicate email registration | Email already in database | "Email already registered" error | Error displayed | Pass |
+| TC05 | Login with deactivated account | Account with is_active: false | Login denied | Login failed correctly | Pass |
+| TC06 | Logout | Logged-in user clicks logout | Session cleared, redirected to /roles | Session cleared, redirect succeeded | Pass |
+
+### Notes Upload and AI Safety
+
+| TC | Test Case | Input | Expected Output | Actual Output | Status |
+|---|---|---|---|---|---|
+| TC07 | Upload valid PDF note | PDF file, title, subject | Note created with status: pending, AI result stored | Note inserted with AI data in MongoDB | Pass |
+| TC08 | Upload disallowed file type | .exe file | File skipped, no entry in database | File skipped silently | Pass |
+| TC09 | Upload without login | Direct POST to /student/upload | Redirect to /login | Redirected to login | Pass |
+| TC10 | AI safety result embedded | Valid PDF upload | ai_status, ai_violation_type, ai_detailed_results stored | All fields present in MongoDB | Pass |
+| TC11 | Upload multiple files | 3 files in one form submission | 3 separate note records created | 3 records inserted | Pass |
+
+### Faculty Review Workflow
+
+| TC | Test Case | Input | Expected Output | Actual Output | Status |
+|---|---|---|---|---|---|
+| TC12 | Approve a pending note | Faculty clicks Approve | status: "approved", student notified | Status updated, notification sent | Pass |
+| TC13 | Reject a note with reason | Faculty clicks Reject, enters reason | status: "rejected", reason stored, student notified | Status and reason stored | Pass |
+| TC14 | Double-approval prevention | Two rapid Approve clicks | First succeeds, second is a no-op | Only one update recorded in DB | Pass |
+| TC15 | Faculty sees only assigned subjects | Faculty with subject=Mathematics logs in | Only Mathematics notes in approval queue | Only correct subject notes shown | Pass |
+| TC16 | Faculty upload auto-approved | Faculty uploads a file | Note created with status: "approved" immediately | Note approved without review stage | Pass |
+
+### Browse, Download, Favorites
+
+| TC | Test Case | Input | Expected Output | Actual Output | Status |
+|---|---|---|---|---|---|
+| TC17 | Browse shows only approved notes | Student visits /student/browse | Only notes with status: approved displayed | Only approved notes listed | Pass |
+| TC18 | Download approved note | Student clicks Download on approved note | File served as attachment | File downloaded correctly | Pass |
+| TC19 | Download rejected note | GET /student/download/<rejected_id> | 404 or access denied (not approved) | Error returned correctly | Pass |
+| TC20 | Toggle favorite | Student clicks heart icon | Note saved; second click removes it | Toggle behaviour correct | Pass |
+
+### Messaging and Notifications
+
+| TC | Test Case | Input | Expected Output | Actual Output | Status |
+|---|---|---|---|---|---|
+| TC21 | Student sends message to faculty | Student selects faculty, types message | Message saved; faculty notified | Message inserted, notification created | Pass |
+| TC22 | Notification badge count | Student has 3 unread notifications | Bell badge shows 3 | Badge shows 3 | Pass |
+| TC23 | Mark all read | Student clicks Mark All Read | All is_read set to true; badge disappears | Badge cleared | Pass |
+
+### Admin Functions
+
+| TC | Test Case | Input | Expected Output | Actual Output | Status |
+|---|---|---|---|---|---|
+| TC24 | Deactivate user | Admin clicks Deactivate button | is_active: false; user cannot login | User blocked from login | Pass |
+| TC25 | Toggle system setting | Admin disables registrations | registrations_enabled: false | Register form shows disabled message | Pass |
+| TC26 | Admin note delete | Admin deletes a note | Note removed from DB, uploader notified | Note removed, notification sent | Pass |
+| TC27 | Danger zone with wrong password | Admin enters wrong password | Access denied, redirect with error | Error shown, no action taken | Pass |
+
+## 4.4 Error Handling and Validation
+
+**Form Validation:** FastAPI uses Pydantic to validate all form data types. Missing required fields return HTTP 422 with detailed error descriptions.
+
+**Session Checks:** Every route begins with a role-check helper function: `get_current_student()`, `get_current_faculty()`, or `get_current_admin()`. If the check fails, the user is immediately redirected to `/login`.
+
+**Database Safety:** `safe_id()` helper functions wrap all ObjectId conversions in try-except blocks to prevent crashes from malformed ID strings passed in URL parameters.
+
+**AI Failures:** All Groq API calls are wrapped in try-except. On any exception, a safe fallback dictionary is returned so the upload is not blocked by an AI service failure.
+
+**Global Exception Handler:** `main.py` registers a global exception handler that catches all unhandled exceptions and returns the full traceback as a plain-text response during development, making debugging straightforward.
+
+## 4.5 Corrections Made After Testing
+
+- **File type check bypass:** Initially, the upload route did not validate file types. After testing, a check against `system_settings_collection` was added to enforce the admin-configured allowed extension list.
+- **Faculty double-approval exploit:** An early version did not use a precondition in `update_one`. After testing with rapid requests in Postman, the atomic precondition `{status: "pending"}` was added.
+- **Notification count staleness:** Initial implementation required a page refresh to update the bell badge. This was resolved by moving count computation into `NotificationMiddleware` which runs on every request.
+- **AI JSON parsing failures:** Early tests showed the Groq model occasionally wrapping flashcard lists in a dictionary. The flashcard parsing code was updated to detect and unwrap common wrapping patterns such as `{"flashcards": [...]}`.
+
+---
+
+---
+
+# CHAPTER 5: RESULTS
+
+## 5.1 Description of System Features and Results
+
+The following major features were developed and verified as fully operational in the final system.
+
+**Role Selection and Login:** Users are presented with a role selection screen. Selecting a role redirects to a role-specific login form. The system blocks cross-role logins and provides a generic error message to prevent credential enumeration. Session is maintained server-side using the Starlette SessionMiddleware.
+
+**Student Dashboard:** The student dashboard displays real-time statistics: total uploads, approved notes count, pending notes, and saved favorites. The latest announcement from faculty is shown as a banner. A recent activity panel lists the five most recent notifications.
+
+**Multi-File Note Upload with AI Analysis:** Students upload files using a drag-and-drop interface. Each uploaded file triggers the AI safety pipeline synchronously before the upload is acknowledged. The MongoDB record for the note contains a full AI report with scores in six categories and an overall Safe/Flagged verdict. This report is visible in the Faculty Approvals panel under the AI Safety modal.
+
+**Faculty Approval Dashboard:** Faculty see a tabbed view of Pending, Approved, and Rejected notes, scoped to their subjects. Approve and Reject actions are available inline with AJAX-powered updates. The dashboard also shows performance statistics including average review time, fastest review, and slowest review across all notes reviewed.
+
+**Browse and Download Notes:** All approved notes appear in the Browse Notes page. Students can filter by subject and search by title. Each note card shows the uploader's name and a heart icon for saving to favorites. A Download button streams the original file to the browser using FastAPI's `FileResponse`.
+
+**AI Study Tools:** Students paste study text and choose a tool: Summary (concise bullet points), Flashcards (interactive question-answer cards), Q&A (direct question answering), or Study Guide (structured topic overview). Responses are rendered dynamically on the page using JavaScript. If the API key is unavailable, a demo mode response is delivered without crashing.
+
+**Admin Analytics Dashboard:** The admin dashboard shows total users, total notes by status, a 7-day upload activity chart, a 7-day reports chart, and a faculty analytics table with per-faculty review counts, average review times, pending queue sizes, and current active status.
+
+**Notifications and Messaging:** Every key platform event generates a notification for the relevant user. The bell icon in the navigation shows the live unread count updated on every page load. Private messaging supports student-to-faculty, faculty-to-student, and admin broadcast conversations. All messages are stored in the `messages` collection and displayed in grouped conversation threads.
+
+## 5.2 Objectives Achievement Summary
+
+| Objective | Achieved |
+|---|---|
+| Secure role-based authentication with bcrypt | Yes |
+| AI safety analysis on upload via Groq API | Yes |
+| Faculty review workflow (Approve/Reject/Return) | Yes |
+| Real-time notification system | Yes |
+| Discussion forum and private messaging | Yes |
+| Admin user and content management | Yes |
+| System settings configurable without code changes | Yes |
+| AI study tools for students | Yes |
+
+All eight primary objectives defined in Chapter 1 were achieved in the final implementation.
+
+## 5.3 Observed Improvements Over Existing Systems
+
+**Quality of available notes:** Because only faculty-approved notes appear in Browse, the platform consistently provides verified, subject-appropriate content — unlike Google Drive or Scribd where anything can be shared without any accountability.
+
+**Reduced faculty effort:** The AI pre-screening flags obviously problematic content before faculty even open the file, reducing wasted review time on spam, plagiarised, or inappropriate material.
+
+**Student engagement:** The AI study tools (flashcards, Q&A, guides) provide additional academic value beyond plain note sharing, giving students consistent reason to return to the platform.
+
+**Administrative visibility:** The admin dashboard gives complete real-time visibility into platform health — user counts, note statuses, faculty response rates, and content reports — that does not exist in any of the existing systems reviewed in Chapter 2.
+
+---
+
+---
+
+# CHAPTER 6: CONTRIBUTIONS
+
+## 6.1 Individual Contributions
+
+This project was developed individually by Bineeth Baby as part of the BCA Final Year Project requirement at St. George's College, Aruvithura.
+
+| Module / Component | Contributor |
+|---|---|
+| Overall System Architecture Design | Bineeth Baby |
+| Authentication Module (auth.py) | Bineeth Baby |
+| Student Module (student.py) | Bineeth Baby |
+| Faculty Module (faculty.py) | Bineeth Baby |
+| Admin Module (admin.py) | Bineeth Baby |
+| Reports Module (reports.py) | Bineeth Baby |
+| Database Design and Indexing (database.py) | Bineeth Baby |
+| AI Integration — Groq API and Llama 3.1 | Bineeth Baby |
+| Text Extraction — PyPDF2, pytesseract, python-docx | Bineeth Baby |
+| Jinja2 HTML Templates for all dashboards | Bineeth Baby |
+| Custom CSS and JavaScript | Bineeth Baby |
+| Notification Middleware | Bineeth Baby |
+| System Testing and Bug Fixes | Bineeth Baby |
+
+## 6.2 Skills and Knowledge Gained
+
+Working on StudyVault provided practical exposure to a broad set of technologies and concepts.
+
+**Web Framework Architecture:** Deep understanding of FastAPI's routing, middleware, dependency injection, and ASGI lifecycle. Understanding how the middleware stack (SessionMiddleware + NotificationMiddleware) is ordered and how request state flows through it.
+
+**Database Design (NoSQL):** Designing document schemas for MongoDB, creating indexes (unique, composite), handling schema-less flexibility, and performing atomic conditional updates.
+
+**API Integration:** Integrating the Groq API, structured prompt engineering for specific JSON output formats, and safely parsing AI-generated JSON with error handling and fallback strategies.
+
+**Security Practices:** Password hashing with bcrypt, session management, constant-time comparison to prevent timing attacks, role enforcement at the server side, soft-delete patterns for data retention.
+
+**Async Programming:** Understanding the difference between synchronous blocking code and async code in Python; using `asyncio.to_thread()` for CPU-bound text extraction and external API calls.
+
+**File Handling:** Working with FastAPI's `UploadFile`, file path management across a local file system, and parsing different document formats with multiple libraries.
+
+**Frontend Integration:** Building server-rendered HTML templates with Jinja2, using the Fetch API for dynamic AJAX interactions, and creating responsive dashboards with custom CSS and JavaScript.
+
+## 6.3 Limitations of the Current System
+
+1. **No Real-Time Chat (WebSocket):** The private messaging system is page-refresh-based. Messages are not pushed to the recipient in real-time; they must reload the page to see new messages.
+2. **Local File Storage:** Uploaded files are stored in the local `uploads/` directory. This is not suitable for production deployment with multiple server instances; a cloud storage service (Amazon S3, Google Cloud Storage) would be needed.
+3. **Single Language Support:** The AI analysis and OCR work best with English-language text. Notes in Malayalam or other regional languages will produce less reliable AI assessments.
+4. **No Email Notifications:** All notifications are in-app only. There is no email or SMS alerting for critical events like approvals or rejections.
+5. **Password-Protected PDF Limitation:** Password-protected PDFs cannot be previewed or have text extracted for AI analysis.
+6. **MongoDB on Localhost:** The current configuration connects to `mongodb://localhost:27017/`. A production deployment would require a managed cluster (MongoDB Atlas) with authentication and backups.
+
+## 6.4 Possible Future Enhancements
+
+1. **WebSocket Real-Time Messaging:** Replace the current polling-based message system with WebSocket connections for instant message delivery, similar to WhatsApp Web.
+2. **Cloud Storage Integration:** Replace local `uploads/` with Amazon S3 or Google Cloud Storage for scalable, redundant, and CDN-served file hosting.
+3. **Email Notification System:** Integrate SMTP via SendGrid or AWS SES to send email alerts for critical events such as note approval, rejection, or new messages.
+4. **Multi-Language AI Support:** Use multilingual Groq models or translation pre-processing to support notes in regional languages including Malayalam.
+5. **Student Reputation System:** Implement a rating system where downloaded and favorited notes accumulate reputation points for the uploader, incentivising quality contributions.
+6. **Mobile Application:** Develop a React Native or Flutter mobile client that consumes the existing FastAPI backend as a REST API, enabling offline note access.
+7. **Plagiarism Cross-Note Check:** Compare newly uploaded notes against the existing database of approved notes to detect duplicate content within the platform itself.
+8. **Enhanced Student Analytics:** Provide students with a view of how many times their approved notes have been downloaded and favorited, creating a feedback loop for improving note quality.
+
+---
+
+---
+
+# REFERENCES
+
+1. FastAPI Documentation — Sebastián Ramírez. Available at: https://fastapi.tiangolo.com
+
+2. MongoDB Documentation — MongoDB Inc. Available at: https://www.mongodb.com/docs
+
+3. Groq API Documentation — Groq Inc. Available at: https://console.groq.com/docs
+
+4. PyPDF2 Documentation. Available at: https://pypdf2.readthedocs.io
+
+5. pytesseract — Python wrapper for Tesseract OCR. Available at: https://pypi.org/project/pytesseract
+
+6. Passlib Documentation — passlib.hash.bcrypt. Available at: https://passlib.readthedocs.io
+
+7. Starlette Documentation — Session Middleware. Available at: https://www.starlette.io/middleware
+
+8. python-docx Documentation. Available at: https://python-docx.readthedocs.io
+
+9. python-pptx Documentation. Available at: https://python-pptx.readthedocs.io
+
+10. Jinja2 Template Engine Documentation. Available at: https://jinja.palletsprojects.com
+
+11. Uvicorn — ASGI Server. Available at: https://www.uvicorn.org
+
+12. Pressman, R.S. (2014). Software Engineering: A Practitioner's Approach, 8th edition. McGraw-Hill Education.
+
+13. Elmasri, R. and Navathe, S.B. (2015). Fundamentals of Database Systems, 7th edition. Pearson.
+
+---
+
+*Report prepared by Bineeth Baby (Register No: 230021085633)*
+*St. George's College, Aruvithura — BCA Final Year Project, Academic Year 2025-26*

@@ -1,0 +1,29 @@
+{% extends "student/base.html" %}
+{% block title %}View Note{% endblock %}
+
+{% block content %}
+
+<h1>{{ note.title }}</h1>
+
+<p><strong>Subject:</strong> {{ note.subject }}</p>
+<p>{{ note.description }}</p>
+
+<hr>
+
+{% if note.file_type == "pdf" %}
+<iframe src="/uploads/{{ note.file_name }}" width="100%" height="500px"></iframe>
+{% else %}
+<p>Preview not available for this file type.</p>
+{% endif %}
+
+<br><br>
+
+<a href="/student/download/{{ note.file_name }}" class="btn">
+    Download
+</a>
+
+<a href="/student/save/{{ note._id }}" class="btn">
+    Save to Favorites
+</a>
+
+{% endblock %}

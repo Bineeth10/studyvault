@@ -1,0 +1,643 @@
+{% extends "student/base.html" %}
+
+{% block title %}StudyVault AI Assistant{% endblock %}
+{% block page_title %}StudyVault AI Assistant{% endblock %}
+
+{% block content %}
+<div class="ai-container">
+    <div class="section-card">
+        <h2>🤖 AI Study Assistant</h2>
+        <p class="subtitle">Enhance your learning with AI-powered tools - Powered by Google Gemini (FREE)</p>
+
+        <!-- Quick Comparison Guide -->
+        <div class="comparison-guide">
+            <div class="guide-header">
+                <h3>💡 Which Tool Should You Use?</h3>
+                <button class="toggle-guide" onclick="toggleGuide()">
+                    <span id="guideToggleText">Show Guide</span>
+                    <span id="guideToggleIcon">▼</span>
+                </button>
+            </div>
+            <div class="guide-content" id="guideContent" style="display: none;">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Tool</th>
+                            <th>Main Goal</th>
+                            <th>Output Size</th>
+                            <th>Learning Style</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="summary-row">
+                            <td><strong>📝 Summary</strong></td>
+                            <td>Understand fast</td>
+                            <td><span class="badge badge-short">Short</span></td>
+                            <td>Passive</td>
+                        </tr>
+                        <tr class="flashcards-row">
+                            <td><strong>🎴 Flashcards</strong></td>
+                            <td>Memorize</td>
+                            <td><span class="badge badge-very-short">Very short per card</span></td>
+                            <td>Active recall</td>
+                        </tr>
+                        <tr class="questions-row">
+                            <td><strong>❓ Q&A</strong></td>
+                            <td>Clear doubts</td>
+                            <td><span class="badge badge-varies">Varies</span></td>
+                            <td>Interactive</td>
+                        </tr>
+                        <tr class="guide-row">
+                            <td><strong>📚 Study Guide</strong></td>
+                            <td>Full preparation</td>
+                            <td><span class="badge badge-long">Medium–Long</span></td>
+                            <td>Structured</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-tips">
+                    <p><strong>💡 Quick Tips:</strong></p>
+                    <ul>
+                        <li><strong>Before exam?</strong> Use Study Guide + Flashcards</li>
+                        <li><strong>Reading long text?</strong> Use Summary first</li>
+                        <li><strong>Confused about something?</strong> Use Q&A</li>
+                        <li><strong>Need to remember?</strong> Use Flashcards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .comparison-guide {
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 30px;
+                border: 1px solid #cbd5e1;
+            }
+
+            .guide-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+
+            .guide-header h3 {
+                margin: 0;
+                color: #1e293b;
+                font-size: 1.2em;
+            }
+
+            .toggle-guide {
+                background: var(--card);
+                border: 2px solid #667eea;
+                color: #667eea;
+                padding: 8px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .toggle-guide:hover {
+                background: #667eea;
+                color: white;
+            }
+
+            #guideToggleIcon {
+                transition: transform 0.3s ease;
+            }
+
+            .guide-content {
+                margin-top: 15px;
+            }
+
+            .comparison-table {
+                width: 100%;
+                background: var(--card);
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                margin-bottom: 20px;
+            }
+
+            .comparison-table th {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px;
+                text-align: left;
+                font-weight: 600;
+            }
+
+            .comparison-table td {
+                padding: 15px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .comparison-table tbody tr {
+                transition: all 0.3s ease;
+            }
+
+            .comparison-table tbody tr:hover {
+                background: var(--card);
+                transform: scale(1.01);
+            }
+
+            .summary-row:hover {
+                background: #eff6ff !important;
+            }
+
+            .flashcards-row:hover {
+                background: #faf5ff !important;
+            }
+
+            .questions-row:hover {
+                background: #f0fdf4 !important;
+            }
+
+            .guide-row:hover {
+                background: #fffbeb !important;
+            }
+
+            .badge {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 12px;
+                font-size: 0.85em;
+                font-weight: 600;
+            }
+
+            .badge-short {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+
+            .badge-very-short {
+                background: #f3e8ff;
+                color: #7c3aed;
+            }
+
+            .badge-varies {
+                background: #dcfce7;
+                color: #059669;
+            }
+
+            .badge-long {
+                background: #fed7aa;
+                color: #d97706;
+            }
+
+            .guide-tips {
+                background: var(--card);
+                padding: 15px;
+                border-radius: 8px;
+                border-left: 4px solid #667eea;
+            }
+
+            .guide-tips ul {
+                margin: 10px 0 0 0;
+                padding-left: 20px;
+            }
+
+            .guide-tips li {
+                margin: 8px 0;
+                color: #475569;
+            }
+
+            .guide-tips strong {
+                color: #1e293b;
+            }
+        </style>
+
+        <script>
+            function toggleGuide() {
+                const content = document.getElementById('guideContent');
+                const text = document.getElementById('guideToggleText');
+                const icon = document.getElementById('guideToggleIcon');
+
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    text.textContent = 'Hide Guide';
+                    icon.textContent = '▲';
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    content.style.display = 'none';
+                    text.textContent = 'Show Guide';
+                    icon.textContent = '▼';
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
+        </script>
+
+        <div class="ai-tools-grid">
+            <!-- Summary Tool - Blue Theme -->
+            <div class="ai-tool-card summary-card">
+                <div class="tool-icon-wrapper">
+                    <div class="tool-icon">📝</div>
+                </div>
+                <h3>Generate Summary</h3>
+                <p>Create concise summaries of your study materials</p>
+                <button class="btn-tool btn-summary" onclick="showTool('summary')">
+                    <span>Use Tool</span>
+                    <span class="arrow">→</span>
+                </button>
+            </div>
+
+            <!-- Flashcards Tool - Purple Theme -->
+            <div class="ai-tool-card flashcards-card">
+                <div class="tool-icon-wrapper">
+                    <div class="tool-icon">🎴</div>
+                </div>
+                <h3>Create Flashcards</h3>
+                <p>Generate flashcards for effective memorization</p>
+                <button class="btn-tool btn-flashcards" onclick="showTool('flashcards')">
+                    <span>Use Tool</span>
+                    <span class="arrow">→</span>
+                </button>
+            </div>
+
+            <!-- Questions Tool - Green Theme -->
+            <div class="ai-tool-card questions-card">
+                <div class="tool-icon-wrapper">
+                    <div class="tool-icon">❓</div>
+                </div>
+                <h3>Ask Questions</h3>
+                <p>Get answers to your academic questions</p>
+                <button class="btn-tool btn-questions" onclick="showTool('questions')">
+                    <span>Use Tool</span>
+                    <span class="arrow">→</span>
+                </button>
+            </div>
+
+            <!-- Study Guide Tool - Orange Theme -->
+            <div class="ai-tool-card guide-card">
+                <div class="tool-icon-wrapper">
+                    <div class="tool-icon">📚</div>
+                </div>
+                <h3>Study Guide</h3>
+                <p>Create comprehensive study guides</p>
+                <button class="btn-tool btn-guide" onclick="showTool('guide')">
+                    <span>Use Tool</span>
+                    <span class="arrow">→</span>
+                </button>
+            </div>
+        </div>
+
+        <style>
+            /* Unique styles for each AI tool card */
+
+            .tool-icon-wrapper {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                transition: transform 0.3s ease;
+            }
+
+            .ai-tool-card:hover .tool-icon-wrapper {
+                transform: scale(1.1) rotate(5deg);
+            }
+
+            .tool-icon {
+                font-size: 3em;
+            }
+
+            /* Summary Card - Blue */
+            .summary-card {
+                border-left: 4px solid #3b82f6;
+            }
+
+            .summary-card .tool-icon-wrapper {
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            }
+
+            .summary-card:hover {
+                border-left-color: #1d4ed8;
+                box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
+            }
+
+            .btn-summary {
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            }
+
+            .btn-summary:hover {
+                background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            }
+
+            /* Flashcards Card - Purple */
+            .flashcards-card {
+                border-left: 4px solid #a855f7;
+            }
+
+            .flashcards-card .tool-icon-wrapper {
+                background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+                box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+            }
+
+            .flashcards-card:hover {
+                border-left-color: #7c3aed;
+                box-shadow: 0 8px 30px rgba(168, 85, 247, 0.2);
+            }
+
+            .btn-flashcards {
+                background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            }
+
+            .btn-flashcards:hover {
+                background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+            }
+
+            /* Questions Card - Green */
+            .questions-card {
+                border-left: 4px solid #10b981;
+            }
+
+            .questions-card .tool-icon-wrapper {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            }
+
+            .questions-card:hover {
+                border-left-color: #059669;
+                box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
+            }
+
+            .btn-questions {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            }
+
+            .btn-questions:hover {
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            }
+
+            /* Study Guide Card - Orange */
+            .guide-card {
+                border-left: 4px solid #f59e0b;
+            }
+
+            .guide-card .tool-icon-wrapper {
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+            }
+
+            .guide-card:hover {
+                border-left-color: #d97706;
+                box-shadow: 0 8px 30px rgba(245, 158, 11, 0.2);
+            }
+
+            .btn-guide {
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            }
+
+            .btn-guide:hover {
+                background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+            }
+
+            /* Button styles */
+            .btn-tool {
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 12px 24px;
+                transition: all 0.3s ease;
+            }
+
+            .btn-tool .arrow {
+                font-size: 1.2em;
+                transition: transform 0.3s ease;
+            }
+
+            .btn-tool:hover .arrow {
+                transform: translateX(5px);
+            }
+
+            /* Enhance card hover effects */
+            .ai-tool-card {
+                transition: all 0.3s ease;
+            }
+
+            .ai-tool-card h3 {
+                font-size: 1.3em;
+                margin: 15px 0 10px;
+                font-weight: 600;
+            }
+
+            .ai-tool-card p {
+                color: var(--muted);
+                line-height: 1.6;
+                margin-bottom: 20px;
+            }
+        </style>
+    </div>
+
+    <!-- Tool Interface (Hidden by default) -->
+    <div id="toolInterface" class="section-card" style="display: none;">
+        <h3 id="toolTitle">AI Tool</h3>
+
+        <div class="tool-interface">
+            <div class="form-group">
+                <label>Input Text</label>
+                <textarea id="toolInput" rows="8" placeholder="Enter your text or question here..."></textarea>
+            </div>
+
+            <button class="btn-primary" onclick="processAI()">Generate</button>
+
+            <div id="toolOutput" class="tool-output" style="display: none;">
+                <h4>Result:</h4>
+                <div id="outputContent" class="output-content"></div>
+            </div>
+        </div>
+
+        <button class="btn-secondary" onclick="closeTool()">Close Tool</button>
+    </div>
+
+    <div class="section-card info-card">
+        <h3>ℹ️ About AI Assistant</h3>
+        <ul>
+            <li>🤖 Powered by advanced AI models</li>
+            <li>📚 Designed for academic use</li>
+            <li>⚡ Fast and accurate responses</li>
+            <li>🔒 Your data is secure</li>
+        </ul>
+        <p><strong>Note:</strong> AI Assistant provides suggestions and does not approve notes. Only faculty can approve
+            uploaded materials.</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentTool = '';
+
+    function showTool(tool) {
+        currentTool = tool;
+        const toolInterface = document.getElementById('toolInterface');
+        const toolTitle = document.getElementById('toolTitle');
+        const toolInput = document.getElementById('toolInput');
+
+        const titles = {
+            'summary': '📝 Generate Summary',
+            'flashcards': '🎴 Create Flashcards',
+            'questions': '❓ Ask Questions',
+            'guide': '📚 Create Study Guide'
+        };
+
+        const placeholders = {
+            'summary': 'Paste the text you want to summarize...',
+            'flashcards': 'Enter the topic or content for flashcards...',
+            'questions': 'Ask your academic question...',
+            'guide': 'Enter the topic for your study guide...'
+        };
+
+        toolTitle.textContent = titles[tool];
+        toolInput.placeholder = placeholders[tool];
+        toolInput.value = '';
+
+        toolInterface.style.display = 'block';
+        document.getElementById('toolOutput').style.display = 'none';
+
+        toolInterface.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeTool() {
+        document.getElementById('toolInterface').style.display = 'none';
+    }
+
+    async function processAI() {
+        const input = document.getElementById('toolInput').value;
+
+        if (!input.trim()) {
+            alert('Please enter some text');
+            return;
+        }
+
+        const outputDiv = document.getElementById('toolOutput');
+        const outputContent = document.getElementById('outputContent');
+
+        // Show loading
+        outputContent.innerHTML = '<div class="loading" style="text-align: center; padding: 40px;"><div style="font-size: 40px; animation: spin 1s linear infinite;">🤖</div><p>Processing with AI...</p></div>';
+        outputDiv.style.display = 'block';
+
+        try {
+            // Call the backend API
+            const formData = new FormData();
+            formData.append('tool_type', currentTool);
+            formData.append('input_text', input);
+
+            const response = await fetch('/student/ai/process', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Show the result
+                let resultHTML = '';
+
+                if (currentTool === 'flashcards') {
+                    try {
+                        // Clean the result if AI adds markdown code blocks
+                        let cleanResult = data.result.trim();
+                        if (cleanResult.startsWith('```')) {
+                            cleanResult = cleanResult.replace(/^```json/, '').replace(/```$/, '').trim();
+                        }
+
+                        const cards = JSON.parse(cleanResult);
+                        resultHTML = '<div class="flashcards-container" style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-top: 20px;">';
+
+                        cards.forEach((card, index) => {
+                            resultHTML += `
+                                <div class="flashcard-ui" style="background: var(--card); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden; border-top: 5px solid #a855f7; transition: transform 0.3s ease;">
+                                    <div style="padding: 20px; border-bottom: 1px solid #f0f0f0; background: #fafafa;">
+                                        <strong style="color: #7c3aed; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Card ${index + 1}</strong>
+                                    </div>
+                                    <div style="padding: 20px;">
+                                        <div style="margin-bottom: 15px;">
+                                            <div style="font-weight: 600; color: #1e293b; margin-bottom: 5px; font-size: 1.1em;">Question:</div>
+                                            <div style="color: #475569;">${card.q}</div>
+                                        </div>
+                                        <div style="padding-top: 15px; border-top: 1px dashed #e2e8f0;">
+                                            <div style="font-weight: 600; color: #10b981; margin-bottom: 5px; font-size: 1.1em;">Answer:</div>
+                                            <div style="color: #475569;">${card.a}</div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        });
+                        resultHTML += '</div>';
+                    } catch (e) {
+                        console.error('Failed to parse JSON flashcards:', e);
+                        resultHTML = `<div class="ai-result" style="line-height: 1.6;">${data.result}</div>`;
+                    }
+                } else {
+                    // Parse markdown-style formatting
+                    let formattedText = data.result
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                        .replace(/\n/g, '<br>'); // Newlines
+
+                    resultHTML = `<div class="ai-result" style="line-height: 1.8; color: #334155;">${formattedText}</div>`;
+                }
+
+                // Add mode indicator
+                if (data.ai_powered === false) {
+                    resultHTML += `
+                        <div class="ai-mode-notice" style="margin-top: 30px; padding: 15px; background: #e3f2fd; border-left: 4px solid #2196f3; border-radius: 5px;">
+                            <strong>ℹ️ AI Mode:</strong> ${data.message || 'Currently in demo mode'}
+                            <br><small>To enable real AI: Set GEMINI_API_KEY in your .env file - Get FREE key at: <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                        </div>`;
+
+                }
+
+                outputContent.innerHTML = resultHTML;
+            } else {
+                outputContent.innerHTML = `
+                    <div class="error" style="color: #f44336; padding: 20px; text-align: center;">
+                        <strong>❌ Error:</strong> ${data.error || 'Failed to process request'}
+                    </div>`;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            outputContent.innerHTML = `
+                <div class="error" style="color: #f44336; padding: 20px; text-align: center;">
+                    <strong>❌ Connection Error:</strong> Failed to connect to AI service
+                    <br><small>${error.message}</small>
+                </div>`;
+        }
+    }
+
+    // Add spinning animation for loading indicator
+    const spinStyle = document.createElement('style');
+    spinStyle.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+    document.head.appendChild(spinStyle);
+
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+<mxfile host="65bd71144e">
+    <diagram id="dfd-level1" name="DFD Level-1 StudyVault">
+        <mxGraphModel dx="3814" dy="2599" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" background="#ffffff" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="StudyVault – Data Flow Diagram (DFD Level-1)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontStyle=1;fontSize=18;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="-145" y="-73" width="1000" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="admin" value="Admin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1a5276;fontStyle=1;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="90" width="140" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="faculty" value="Faculty" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1a5276;fontStyle=1;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="615" y="90" width="140" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="student" value="Student" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#1a5276;fontStyle=1;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="870" width="140" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1" value="1.0&#10;Publish Notes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="55" y="400" width="175" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2" value="2.0&#10;Select Students" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="400" width="175" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3" value="3.0&#10;Approve / Verify Notes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="545" y="400" width="195" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p4" value="4.0&#10;Review Notes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="810" y="400" width="175" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p5" value="5.0&#10;Submit Notes" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="400" width="175" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds_users" value="D1  Users" style="shape=mxgraph.flowchart.database;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1e8449;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="90" width="190" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds_notes" value="D2  Notes" style="shape=mxgraph.flowchart.database;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1e8449;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="290" width="190" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds_verif" value="D3  Verification" style="shape=mxgraph.flowchart.database;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1e8449;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="490" width="190" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="ds_notif" value="D4  Notifications" style="shape=mxgraph.flowchart.database;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#1e8449;fontSize=12;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+                    <mxGeometry x="1350" y="690" width="190" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="f1" value="Manage Users" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#1a5276;fontStyle=1;fontSize=10;fontColor=#1a5276;endArrow=block;endFill=1;" parent="1" source="admin" target="ds_users" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2" value="Publish Notes" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#7d6600;fontStyle=1;fontSize=10;fontColor=#7d6600;endArrow=block;endFill=1;" parent="1" source="faculty" target="p1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f3" value="Question Data" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;strokeColor=#1e8449;fontStyle=1;fontSize=10;fontColor=#1e8449;endArrow=block;endFill=1;" parent="1" source="p1" target="ds_notes" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f4" value="Select Students" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#7d6600;fontStyle=1;fontSize=10;fontColor=#7d6600;endArrow=block;endFill=1;" parent="1" source="faculty" target="p2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f5" value="Assigned Notes" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.55;entryDx=0;entryDy=0;strokeColor=#1e8449;fontStyle=1;fontSize=10;fontColor=#1e8449;endArrow=block;endFill=1;" parent="1" source="p2" target="ds_notes" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f6" value="Verify Notes" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#7d6600;fontStyle=1;fontSize=10;fontColor=#7d6600;endArrow=block;endFill=1;" parent="1" source="faculty" target="p3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f7" value="Verified Notes" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;strokeColor=#1e8449;fontStyle=1;fontSize=10;fontColor=#1e8449;endArrow=block;endFill=1;" parent="1" source="p3" target="ds_verif" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f8" value="Review Notes" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.7;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#7d6600;fontStyle=1;fontSize=10;fontColor=#7d6600;endArrow=block;endFill=1;" parent="1" source="faculty" target="p4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f9" value="Feedback" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;strokeColor=#1e8449;fontStyle=1;fontSize=10;fontColor=#1e8449;endArrow=block;endFill=1;" parent="1" source="p4" target="ds_verif" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f10" value="Submit Notes" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeColor=#7d6600;fontStyle=1;fontSize=10;fontColor=#7d6600;endArrow=block;endFill=1;" parent="1" source="student" target="p5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f11" value="Student Notes" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;strokeColor=#1e8449;fontStyle=1;fontSize=10;fontColor=#1e8449;endArrow=block;endFill=1;" parent="1" source="p5" target="ds_notes" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f12" value="Approval / Rejection Alert" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.7;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;strokeColor=#7d3c98;fontStyle=1;fontSize=10;fontColor=#7d3c98;endArrow=block;endFill=1;" parent="1" source="p3" target="ds_notif" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f13" value="Notification Alert" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#7d3c98;fontStyle=1;fontSize=10;fontColor=#7d3c98;endArrow=block;endFill=1;" parent="1" source="ds_notif" target="student" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#aaaaaa;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="870" width="330" height="195" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_title" value="Legend" style="text;html=1;fillColor=none;strokeColor=none;fontStyle=1;fontSize=13;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="878" width="200" height="25" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_rect" value="" style="rounded=0;fillColor=#dae8fc;strokeColor=#1a5276;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="910" width="70" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_rect_lbl" value="External Entity (Rectangle)" style="text;html=1;fillColor=none;strokeColor=none;fontSize=11;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="155" y="910" width="220" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_oval" value="" style="ellipse;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="948" width="70" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_oval_lbl" value="Process (Oval)" style="text;html=1;fillColor=none;strokeColor=none;fontSize=11;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="155" y="948" width="220" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_cyl" value="" style="shape=mxgraph.flowchart.database;fillColor=#d5e8d4;strokeColor=#1e8449;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="988" width="70" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_cyl_lbl" value="Data Store (Cylinder)" style="text;html=1;fillColor=none;strokeColor=none;fontSize=11;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="155" y="988" width="220" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="leg_arr" value="" style="endArrow=block;endFill=1;strokeColor=#1a5276;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="75" y="1043" as="sourcePoint"/>
+                        <mxPoint x="145" y="1043" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg_arr_lbl" value="Data Flow (Arrow)" style="text;html=1;fillColor=none;strokeColor=none;fontSize=11;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="155" y="1030" width="220" height="28" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -1,0 +1,229 @@
+{% extends "student/base.html" %}
+
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="section-card">
+    <div class="notification-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>🔔 Notifications</h2>
+        {% set unread_count = notifications | selectattr("is_read", "equalto", False) | list | length %}
+        <div class="notification-actions" style="display: flex; gap: 10px;">
+            <button id="markAllBtn" onclick="markAllAsRead()" class="btn-action" {% if unread_count==0 %}disabled
+                style="opacity: 0.5; cursor: default;" {% endif %}>
+                Mark all as read
+            </button>
+            <button id="clearAllBtn" onclick="clearAllNotifications()" class="btn-action btn-danger" {% if
+                notifications|length==0 %}disabled style="opacity: 0.5; cursor: default;" {% endif %}>
+                Clear All
+            </button>
+        </div>
+    </div>
+
+    {% if notifications %}
+    <div class="notifications-list">
+        {% for notification in notifications %}
+        <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
+            onclick="markAsRead('{{ notification._id }}', this)">
+            <div class="notification-icon">
+                {% set n_type = notification.type | upper %}
+                {% if n_type == 'UPLOAD' %}📤
+                {% elif n_type in ['APPROVAL', 'SUCCESS'] %}✅
+                {% elif n_type in ['REJECTION', 'DANGER'] %}❌
+                {% elif n_type == 'MESSAGE' %}💬
+                {% elif n_type == 'FORUM_REPLY' %}💭
+                {% elif n_type in ['WARNING', 'REPORT_ALERT'] %}⚠️
+                {% elif n_type in ['RETURNED_NOTE', 'RETURN'] %}↩️
+                {% elif n_type == 'SYSTEM_ALERT' %}🚫
+                {% elif n_type in ['SYSTEM', 'SYSTEM_URGENT'] %}📢
+                {% elif n_type == 'ANNOUNCEMENT' %}📣
+                {% elif n_type == 'REPORT_FILED' %}📋
+                {% else %}🔔
+                {% endif %}
+            </div>
+            <div class="notification-content">
+                <p style="font-weight: 600; margin-bottom: 2px;">{{ notification.title or 'Notification' }}</p>
+                <p>{{ notification.message }}</p>
+                <small class="notif-timestamp" data-utc="{{ notification.created_at | utc_iso }}"
+                    title="{{ notification.created_at | utc_iso }}">
+                    {{ notification.created_at | time_ago }}
+                </small>
+            </div>
+            {% if not notification.is_read %}
+            <div class="unread-badge">●</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-data-state">
+        <div class="no-data-icon">🔕</div>
+        <h3>You’re all caught up!</h3>
+        <p>No new notifications.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // ── UTC → Local time conversion ───────────────────────────────
+    // Before: "Apr 21, 2026 02:30 AM" (raw UTC from strftime)
+    // After:  "Apr 21, 2026, 08:00 AM" (user's local timezone, e.g. IST)
+    function formatLocalTime(isoUtc) {
+        if (!isoUtc) return '';
+        const d = new Date(isoUtc);
+        if (isNaN(d.getTime())) return isoUtc;
+        return d.toLocaleString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    }
+
+    // ── Toast helper ──────────────────────────────────────────────
+    function showPageToast(message, type = 'success') {
+        const existing = document.getElementById('page-notif-toast');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.id = 'page-notif-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position:fixed;top:24px;right:24px;z-index:99999;
+            padding:14px 22px;border-radius:10px;font-weight:600;
+            background:${type==='success'?'#2ecc71':type==='error'?'#e74c3c':'#3498db'};
+            color:white;box-shadow:0 6px 20px rgba(0,0,0,0.25);
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity 0.4s'; setTimeout(()=>toast.remove(),450); }, 3000);
+    }
+
+    // ── Mark single notification read ────────────────────────────
+    async function markAsRead(notificationId, element) {
+        if (!element.classList.contains('unread')) return;
+        console.log(`[Notifications] Calling POST /student/notifications/mark-read/${notificationId}`);
+
+        try {
+            const response = await fetch(`/student/notifications/mark-read/${notificationId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            console.log(`[Notifications] mark-read response: ${response.status}`);
+
+            if (response.ok) {
+                element.classList.remove('unread');
+                const badge = element.querySelector('.unread-badge');
+                if (badge) badge.remove();
+
+                // Update sidebar/header badge counter
+                const headerBadge = document.querySelector('.unread-badge');
+                if (headerBadge) {
+                    let count = parseInt(headerBadge.textContent || '0') - 1;
+                    if (count <= 0) headerBadge.remove();
+                    else headerBadge.textContent = count;
+                }
+
+                // Disable mark-all button if no unread remain
+                const remainingUnread = document.querySelectorAll('.notification-item.unread').length;
+                if (remainingUnread === 0) {
+                    const btn = document.getElementById('markAllBtn');
+                    if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'default'; }
+                }
+                console.log('[Notifications] UI updated — item marked read');
+            }
+        } catch (error) {
+            console.error('[Notifications] mark-read error:', error);
+        }
+    }
+
+    // ── Mark ALL as read ──────────────────────────────────────────
+    async function markAllAsRead() {
+        const btn = document.getElementById('markAllBtn');
+        if (btn && btn.disabled) return;
+        console.log('[Notifications] Calling POST /student/notifications/mark-all-read');
+        if (btn) { btn.disabled = true; btn.textContent = 'Marking…'; }
+
+        try {
+            const response = await fetch('/student/notifications/mark-all-read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            console.log(`[Notifications] mark-all-read response: ${response.status}`);
+            const data = await response.json();
+            console.log('[Notifications] mark-all-read data:', data);
+
+            if (response.ok) {
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                    const badge = item.querySelector('.unread-badge');
+                    if (badge) badge.remove();
+                });
+                document.querySelectorAll('.unread-badge').forEach(b => b.remove());
+                showPageToast('✓ All notifications marked as read');
+                console.log('[Notifications] UI updated — all unread styles removed');
+            } else {
+                showPageToast('Failed to mark all as read', 'error');
+                alert('Failed to mark all as read. Please try again.');
+            }
+        } catch (error) {
+            console.error('[Notifications] mark-all-read error:', error);
+            showPageToast('Network error', 'error');
+        } finally {
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'default'; btn.textContent = 'Mark all as read'; }
+        }
+    }
+
+    // ── Clear ALL notifications ───────────────────────────────────
+    async function clearAllNotifications() {
+        if (!confirm('Are you sure you want to delete all notifications? This cannot be undone.')) return;
+        const btn = document.getElementById('clearAllBtn');
+        if (btn && btn.disabled) return;
+        console.log('[Notifications] Calling DELETE /student/notifications/clear-all');
+        if (btn) { btn.disabled = true; btn.textContent = 'Clearing…'; }
+
+        try {
+            const response = await fetch('/student/notifications/clear-all', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            console.log(`[Notifications] clear-all response: ${response.status}`);
+            const data = await response.json();
+            console.log('[Notifications] clear-all data:', data);
+
+            if (response.ok) {
+                const list = document.querySelector('.notifications-list');
+                if (list) {
+                    list.innerHTML = `
+                    <div class="no-data-state">
+                        <div class="no-data-icon">🔕</div>
+                        <h3>You're all caught up!</h3>
+                        <p>No new notifications.</p>
+                    </div>`;
+                }
+                document.querySelectorAll('.unread-badge').forEach(b => b.remove());
+                const markBtn = document.getElementById('markAllBtn');
+                if (markBtn) { markBtn.disabled = true; markBtn.style.opacity = '0.5'; markBtn.style.cursor = 'default'; }
+                showPageToast('🗑️ All notifications cleared');
+                console.log('[Notifications] UI updated — list cleared');
+            } else {
+                showPageToast('Failed to clear notifications', 'error');
+                alert('Failed to clear notifications. Please try again.');
+            }
+        } catch (error) {
+            console.error('[Notifications] clear-all error:', error);
+            showPageToast('Network error', 'error');
+        } finally {
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'default'; btn.textContent = 'Clear All'; }
+        }
+    }
+
+    // ── Run local time conversion on DOM ready ────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.notif-timestamp[data-utc]').forEach(el => {
+            const localStr = formatLocalTime(el.getAttribute('data-utc'));
+            if (localStr) el.textContent = localStr;
+        });
+    });
+</script>
+{% endblock %}

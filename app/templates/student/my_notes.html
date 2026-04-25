@@ -1,0 +1,148 @@
+{% extends "student/base.html" %}
+
+{% block title %}My Notes{% endblock %}
+{% block page_title %}My Notes{% endblock %}
+
+{% block content %}
+<style>
+    /* ── Consistent action button colors ───────────────── */
+    .btn-action {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: background 0.18s ease, transform 0.1s ease;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Preview — Blue */
+    .btn-preview {
+        background: #4c6ef5;
+        color: #ffffff !important;
+    }
+
+    .btn-preview:hover {
+        background: #3b5bdb;
+    }
+
+    /* Re-submit — Orange (corrective action) */
+    .btn-resubmit {
+        background: #f59f00;
+        color: #1a1a1a !important;
+        font-weight: 600;
+    }
+
+    .btn-resubmit:hover {
+        background: #e67700;
+    }
+</style>
+
+<div class="section-card">
+    <h2>📝 My Uploaded Notes</h2>
+
+    {% if notes %}
+    <div class="notes-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Note</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for note in notes %}
+                <tr>
+                    <td>
+                        <strong>{{ note.title }}</strong>
+                        <div style="font-size: 0.8em; color: #64748b; margin-top: 4px;">
+                            {{ note.uploaded_at.strftime('%b %d, %Y') if note.uploaded_at else '' }}
+                        </div>
+                    </td>
+                    <td>{{ note.subject }}</td>
+                    <td>
+                        {% if note.status == 'pending' %}
+                        <span class="badge badge-warning">⏳ Pending</span>
+                        {% elif note.status == 'approved' %}
+                        <span class="badge badge-success">✅ Approved</span>
+                        {% if note.reviewed_by_name or note.reviewed_by %}
+                        <div style="font-size: 0.8em; color: #15803d; margin-top: 4px;">
+                            By: {{ note.reviewed_by_name or note.reviewed_by or 'Faculty' }} | {{ (note.reviewed_at or
+                            note.approved_at or note.uploaded_at).strftime('%b %d') }}
+                        </div>
+                        {% endif %}
+                        {% elif note.status == 'rejected' %}
+                        <span class="badge badge-danger">❌ Rejected</span>
+                        <div class="rejection-feedback" style="margin-top: 5px; font-size: 0.85em; text-align: left;">
+                            <div
+                                style="background: #fee2e2; border-left: 3px solid #ef4444; padding: 8px; border-radius: 4px; color: #b91c1c;">
+                                <strong>Reason:</strong> {{ note.rejection_reason }}<br>
+                                <span style="font-size: 0.8em; color: #7f1d1d;">
+                                    By: {{ note.reviewed_by_name or note.rejected_by or 'Faculty' }} | {{
+                                    (note.rejected_at or note.reviewed_at).strftime('%b %d') }}
+                                </span>
+                            </div>
+                        </div>
+                        {% elif note.status == 'admin_review' %}
+                        <span class="badge badge-warning" style="background: #e67e22; color: white;">⚠️ Admin
+                            Review</span>
+                        <div style="font-size: 0.85em; color: #d35400; margin-top: 5px;">
+                            Awaiting admin review ({{ note.admin_review_reason }})
+                        </div>
+                        {% elif note.status == 'reported' %}
+                        <span class="badge badge-danger" style="background: #e74c3c;">⚠️ Reported</span>
+                        {% elif note.status == 'blocked' %}
+                        <span class="badge badge-danger" style="background: #34495e;">🚫 Blocked</span>
+                        {% endif %}
+
+                        {# Show Warning even if Approved/Reported #}
+                        {% if note.admin_warning and note.status != 'Blocked' and note.status != 'rejected' %}
+                        <div class="warning-feedback" style="margin-top: 5px; font-size: 0.85em; text-align: left;">
+                            <div
+                                style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 8px; border-radius: 4px; color: #856404;">
+                                <strong>⚠️ Admin Warning:</strong> {{ note.admin_warning }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if note.status == 'approved' %}
+                        <a href="/student/preview/{{ note._id }}" class="btn-action btn-preview" target="_blank">
+                            👁️ Preview
+                        </a>
+                        {% elif note.status == 'rejected' %}
+                        <a href="/student/upload?retry={{ note._id }}" class="btn-action btn-resubmit">
+                            🔁 Re-submit
+                        </a>
+                        {% elif note.status == 'reported' %}
+                        <span class="text-muted" style="color: var(--muted);">Under Review</span>
+                        {% elif note.status == 'blocked' %}
+                        <span class="text-muted" style="color: var(--muted);">Blocked</span>
+                        {% else %}
+                        <span class="text-muted" style="color: var(--muted);">Not available</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data-state">
+        <div class="no-data-icon">📭</div>
+        <h3>No notes uploaded yet</h3>
+        <p>Start sharing your knowledge with others</p>
+        <a href="/student/upload" class="btn-primary">Upload Your First Note</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

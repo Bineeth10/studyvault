@@ -1,0 +1,416 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Admin Review Alerts -->
+{% if admin_review_notes > 0 %}
+<div class="alert-section" style="margin-bottom: 20px;">
+    <div class="alert-card warning"
+        style="background: #fff8e1; border-left: 5px solid #ffa000; padding: 15px 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-size: 1.5rem;">🔶</span>
+            <div>
+                <h3 style="margin: 0; color: #7f5f00; font-size: 1.1rem;">New Note Waiting for Review</h3>
+                <p style="margin: 5px 0 0; color: #a57c00; font-size: 0.9rem;">There are <strong>{{ admin_review_notes
+                        }}</strong> notes that need your attention because no faculty was assigned.</p>
+            </div>
+        </div>
+        <a href="/admin/notes?status=admin_review" class="btn-action"
+            style="background: #ffa000; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">Review
+            Now</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Statistics Cards -->
+<div class="stats-cards">
+    <div class="stat-card blue">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <h3>{{ total_users }}</h3>
+            <p>Total Users</p>
+        </div>
+    </div>
+
+    <div class="stat-card green">
+        <div class="stat-icon">👨‍🎓</div>
+        <div class="stat-info">
+            <h3>{{ total_students }}</h3>
+            <p>Students</p>
+        </div>
+    </div>
+
+    <div class="stat-card purple">
+        <div class="stat-icon">👨‍🏫</div>
+        <div class="stat-info">
+            <h3>{{ total_faculty }}</h3>
+            <p>Faculty Members</p>
+        </div>
+    </div>
+
+    <div class="stat-card orange">
+        <div class="stat-icon">📝</div>
+        <div class="stat-info">
+            <h3>{{ total_notes }}</h3>
+            <p>Total Notes</p>
+        </div>
+    </div>
+
+    <div class="stat-card yellow">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info">
+            <h3>{{ pending_notes }}</h3>
+            <p>Pending Approvals</p>
+        </div>
+    </div>
+
+    <div class="stat-card success">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+            <h3>{{ approved_notes }}</h3>
+            <p>Approved Notes</p>
+        </div>
+    </div>
+
+    <div class="stat-card red">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-info">
+            <h3>{{ open_reports }}</h3>
+            <p>Open Reports</p>
+        </div>
+    </div>
+
+    <div class="stat-card danger">
+        <div class="stat-icon">❌</div>
+        <div class="stat-info">
+            <h3>{{ rejected_notes }}</h3>
+            <p>Rejected Notes</p>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Charts -->
+<div class="section-card" style="margin-top: 20px;">
+    <h2>📊 Analytics & Trends</h2>
+    <div class="charts-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div class="chart-container">
+            <canvas id="notesChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="reportsChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="usersChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+        background: var(--card);
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    }
+</style>
+
+<!-- Data Container for Charts -->
+<div id="chartDataContainer" style="display: none;" data-notes-labels='{{ notes_chart_labels | tojson }}'
+    data-notes-counts='{{ notes_chart_data | tojson }}' data-reports-labels='{{ reports_chart_labels | tojson }}'
+    data-reports-counts='{{ reports_chart_data | tojson }}' data-total-users='{{ total_users | default(0) }}'
+    data-total-students='{{ total_students | default(0) }}' data-total-faculty='{{ total_faculty | default(0) }}'>
+</div>
+
+<!-- Data Injected Directly into Script for Reliability -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dataEl = document.getElementById('chartDataContainer');
+        const notesLabels = JSON.parse(dataEl.dataset.notesLabels || '[]');
+        const notesData = JSON.parse(dataEl.dataset.notesCounts || '[]');
+        const reportsLabels = JSON.parse(dataEl.dataset.reportsLabels || '[]');
+        const reportsData = JSON.parse(dataEl.dataset.reportsCounts || '[]');
+
+        const totalUsers = parseInt(dataEl.dataset.totalUsers) || 0;
+        const totalStudents = parseInt(dataEl.dataset.totalStudents) || 0;
+        const totalFaculty = parseInt(dataEl.dataset.totalFaculty) || 0;
+        const adminCount = Math.max(0, totalUsers - totalStudents - totalFaculty);
+
+        // Chart Helper - Creates beautiful gradients
+        const getGradient = (ctx, color1, color2) => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(1, color2);
+            return gradient;
+        };
+
+        // 1. Notes Uploads Area Chart
+        const notesCtx = document.getElementById('notesChart').getContext('2d');
+        new Chart(notesCtx, {
+            type: 'line',
+            data: {
+                labels: notesLabels,
+                datasets: [{
+                    label: 'Notes Uploaded',
+                    data: notesData,
+                    borderColor: '#4f46e5',
+                    backgroundColor: getGradient(notesCtx, 'rgba(79, 70, 229, 0.2)', 'rgba(79, 70, 229, 0)'),
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#4f46e5',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Notes Uploaded (Last 7 Days)', font: { size: 14, weight: 'bold' }, padding: 20 },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] }, ticks: { stepSize: 1, color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+
+        // 2. Reports Trend Line Chart
+        const reportsCtx = document.getElementById('reportsChart').getContext('2d');
+        new Chart(reportsCtx, {
+            type: 'line',
+            data: {
+                labels: reportsLabels,
+                datasets: [{
+                    label: 'New Reports',
+                    data: reportsData,
+                    borderColor: '#ef4444',
+                    backgroundColor: getGradient(reportsCtx, 'rgba(239, 68, 68, 0.15)', 'rgba(239, 68, 68, 0)'),
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ef4444',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Reports Trend (Last 7 Days)', font: { size: 14, weight: 'bold' }, padding: 20 },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] }, ticks: { stepSize: 1, color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+
+        // 3. User Distribution Doughnut Chart
+        const usersCtx = document.getElementById('usersChart').getContext('2d');
+        new Chart(usersCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Students', 'Faculty', 'Admin/Other'],
+                datasets: [{
+                    data: [totalStudents, totalFaculty, adminCount],
+                    backgroundColor: ['#10b981', '#6366f1', '#f59e0b'],
+                    hoverOffset: 10,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    title: { display: true, text: 'User Distribution', font: { size: 14, weight: 'bold' }, padding: 20 },
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12 } } }
+                }
+            }
+        });
+    });
+</script>
+
+<!-- Faculty Analytics Section -->
+<div class="section-card" style="margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">👨‍🏫 Faculty Performance Analytics</h2>
+        <span class="badge badge-info" style="font-size: 0.8rem; padding: 5px 12px; border-radius: 20px;">Admin Only
+            View</span>
+    </div>
+
+    <div class="table-responsive" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; min-width: 850px;">
+            <thead>
+                <tr style="background: rgba(0,0,0,0.02); border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 600;">Faculty Name</th>
+                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 600;">Total Actions</th>
+                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 600;">Reviews (Month)</th>
+                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 600;">Workload</th>
+                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 600;">Avg. Review Time</th>
+                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 600;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in faculty_analytics %}
+                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;"
+                    onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 15px;">
+                        <div style="font-weight: 600; color: #1e293b;">{{ f.name|title }}</div>
+                        <small style="color: #94a3b8;">{{ f.experience_label }} Exp.</small>
+                    </td>
+                    <td style="padding: 15px;">
+                        <span style="font-size: 1rem; font-weight: 700; color: #6366f1;">{{ f.actions }}</span>
+                        <small style="color: #94a3b8; display: block;">Lifetime</small>
+                    </td>
+                    <td style="padding: 15px;">
+                        <span style="font-size: 1rem; font-weight: 700; color: #10b981;">{{ f.monthly_reviews }}</span>
+                        <small style="color: #94a3b8; display: block;">Current Month</small>
+                    </td>
+                    <td style="padding: 15px;">
+                        <span style="font-weight: 600;">{{ f.pending }} notes</span>
+                    </td>
+                    <td style="padding: 15px;">
+                        {% set color_class = 'text-warning' if f.avg_time_sec and f.avg_time_sec > 86400 else
+                        'text-success' if f.avg_time_sec else 'text-muted' %}
+                        <div class="{{ color_class }}" style="font-weight: 600;">
+                            {{ f.avg_time_sec | format_duration | default('--') }}
+                        </div>
+                        {% if f.avg_time_sec %}
+                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">
+                            <span title="Fastest" style="color: #10b981;">⚡ {{ f.fastest_sec | format_duration }}</span>
+                            |
+                            <span title="Slowest" style="color: #f59e0b;">🐢 {{ f.slowest_sec | format_duration
+                                }}</span>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 15px;">
+                        {% if f.status == 'Active' %}
+                        <span class="badge badge-success">Active</span>
+                        {% elif f.status == 'Disabled' %}
+                        <span class="badge badge-danger">Disabled</span>
+                        {% elif f.status == 'Inactive' %}
+                        <span class="badge badge-danger">Inactive</span>
+                        {% else %}
+                        <span class="badge badge-warning">{{ f.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding: 30px; text-align: center; color: #94a3b8;">No faculty data available
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Activities Section -->
+<div class="dashboard-sections">
+    <!-- Recent Notes -->
+    <div class="section-card">
+        <h2>📝 Recent Notes Activity</h2>
+        {% if recent_notes %}
+        <div class="activity-list">
+            {% for note in recent_notes %}
+            <div class="activity-item">
+                <div class="activity-icon">📄</div>
+                <div class="activity-content">
+                    <p><strong>{{ note.title }}</strong></p>
+                    <p>by {{ note.uploader_name }} • {{ note.subject }}</p>
+                    <small>
+                        <span class="badge badge-{{ note.status }}">{{ note.status }}</span> •
+                        {{ note.created_at|default('N/A') }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No recent notes</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Reports -->
+    <div class="section-card">
+        <h2>⚠️ Recent Reports</h2>
+        {% if recent_reports %}
+        <div class="activity-list">
+            {% for report in recent_reports %}
+            <div class="activity-item">
+                <div class="activity-icon">🚨</div>
+                <div class="activity-content">
+                    <p><strong>{{ report.reason }}</strong></p>
+                    <p>Reported by {{ report.reporter_name }} • {{ report.item_type }}</p>
+                    <small>
+                        <span class="badge badge-{{ report.status }}">{{ report.status }}</span> •
+                        {{ report.created_at|default('N/A') }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No recent reports</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Announcements -->
+    <div class="section-card">
+        <h2>📢 Recent Announcements</h2>
+        {% if recent_announcements %}
+        <div class="activity-list">
+            {% for announcement in recent_announcements %}
+            <div class="activity-item">
+                <div class="activity-icon">📣</div>
+                <div class="activity-content">
+                    <p><strong>{{ announcement.title }}</strong></p>
+                    <p>{{ (announcement.content|default(''))[:100] }}...</p>
+                    <small>{{ announcement.created_at|default('N/A') }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No recent announcements</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section-card">
+    <h2>⚡ Quick Actions</h2>
+    <div class="quick-actions">
+        <a href="/admin/users" class="action-btn primary">
+            <span>👥</span>
+            <span>Manage Users</span>
+        </a>
+        <a href="/admin/notes?status=pending" class="action-btn warning">
+            <span>⏳</span>
+            <span>Pending Notes</span>
+        </a>
+        <a href="/admin/reports?status=open" class="action-btn danger">
+            <span>⚠️</span>
+            <span>Open Reports</span>
+        </a>
+        <a href="/admin/announcements" class="action-btn info">
+            <span>📢</span>
+            <span>New Announcement</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

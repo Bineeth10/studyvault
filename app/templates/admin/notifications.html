@@ -1,0 +1,224 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Notifications - Admin{% endblock %}
+{% block page_title %}🔔 Admin Notifications{% endblock %}
+
+{% block content %}
+<div class="section-card" style="padding: 30px;">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;">
+        <div>
+            <h2 style="margin:0;">System Notifications</h2>
+            {% set unread = notifications | selectattr("is_read","equalto",False) | list | length %}
+            {% if unread > 0 %}
+            <span style="background:#e74c3c;color:white;border-radius:12px;padding:3px 10px;font-size:0.85em;font-weight:bold;">
+                {{ unread }} unread
+            </span>
+            {% endif %}
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button id="adminMarkAllBtn" onclick="adminMarkAllRead()"
+                style="background:#3498db;color:white;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;">
+                ✓ Mark All as Read
+            </button>
+            <button id="adminClearAllBtn" onclick="adminClearAll()"
+                style="background:#e74c3c;color:white;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;">
+                🗑️ Clear All
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification List -->
+    <!-- Inline block to resolve CSS warnings and clean up DOM elements -->
+    <style>
+        .notif-row {
+            display: flex; gap: 16px; align-items: flex-start; padding: 16px;
+            border-radius: 10px; margin-bottom: 10px; cursor: pointer;
+            border: 1px solid var(--border-color, #ecf0f1); transition: all 0.2s;
+            background: var(--card);
+        }
+        .notif-unread {
+            background: #f0f7ff; 
+            border-left: 4px solid #3498db;
+        }
+        html.dark .notif-unread, html[data-theme="dark"] .notif-unread, body.dark-mode .notif-unread {
+            background: var(--bg) !important;
+            border-left: 4px solid #3498db !important;
+        }
+    </style>
+    <div class="notifications-list">
+        {% if notifications %}
+            {% for notif in notifications %}
+            <div class="notif-row {% if not notif.is_read %}notif-unread{% endif %}"
+                data-id="{{ notif._id }}"
+                onclick="adminMarkRead('{{ notif._id }}', this)">
+
+                <div style="font-size:26px;flex-shrink:0;">
+                    {% if notif.type in ['WORKLOAD','URGENT'] %}⚡
+                    {% elif notif.type in ['SYSTEM', 'SYSTEM_URGENT'] %}📢
+                    {% elif notif.type == 'MESSAGE' %}💬
+                    {% elif notif.type == 'WARNING' %}⚠️
+                    {% elif notif.type in ['REPORT', 'REPORT_ALERT'] %}🚩
+                    {% elif notif.type == 'SYSTEM_ALERT' %}🚨
+                    {% elif notif.type == 'ADMIN_ACTION' %}🛡️
+                    {% elif notif.type == 'ANNOUNCEMENT' %}📣
+                    {% else %}🔔
+                    {% endif %}
+                </div>
+
+                <div style="flex:1;">
+                    <p style="font-weight:700;margin:0 0 4px;">{{ notif.title }}</p>
+                    <p style="color:#555;margin:0 0 6px;font-size:0.95em;">{{ notif.message }}</p>
+                    <small class="notif-timestamp" style="color: var(--muted);"
+                        data-utc="{{ notif.created_at | utc_iso }}"
+                        title="{{ notif.created_at | utc_iso }}">
+                        {{ notif.created_at | time_ago }}
+                    </small>
+                </div>
+
+                {% if not notif.is_read %}
+                <span style="width:10px;height:10px;background:#3498db;border-radius:50%;flex-shrink:0;margin-top:6px;"></span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:60px 20px;opacity:0.5;">
+            <div style="font-size:64px;margin-bottom:15px;">✨</div>
+            <h3>All Caught Up!</h3>
+            <p>No notifications at this time.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div id="admin-toast" style="display:none;position:fixed;top:24px;right:24px;z-index:99999;padding:14px 22px;border-radius:10px;font-weight:600;color:white;box-shadow:0 6px 20px rgba(0,0,0,0.25);"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── Toast ─────────────────────────────────────────────────────
+    function showAdminToast(message, type = 'success') {
+        const toast = document.getElementById('admin-toast');
+        toast.textContent = message;
+        toast.style.background = type === 'success' ? '#2ecc71' : type === 'error' ? '#e74c3c' : '#3498db';
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; setTimeout(() => { toast.style.display = 'none'; toast.style.opacity = '1'; }, 450); }, 3000);
+    }
+
+    // ── Mark single read ──────────────────────────────────────────
+    async function adminMarkRead(notifId, element) {
+        console.log(`[Notifications] Admin mark-read: ${notifId}`);
+        if (!element.classList.contains('notif-unread')) return;
+        try {
+            const res = await fetch(`/admin/notifications/mark-read/${notifId}`, { method: 'POST' });
+            console.log(`[Notifications] mark-read response: ${res.status}`);
+            if (res.ok) {
+                element.classList.remove('notif-unread');
+                const dot = element.querySelector('span[style*="border-radius:50%"]');
+                if (dot) dot.remove();
+                console.log('[Notifications] UI updated — item marked read');
+            }
+        } catch (err) {
+            console.error('[Notifications] mark-read error:', err);
+        }
+    }
+
+    // ── UTC → Local time conversion ──────────────────────────────
+    // Converts all data-utc ISO strings to the user's local timezone.
+    // Before (server): "3h ago" (UTC-based) — shows wrong for IST users
+    // After  (client): "3h ago" or "Apr 21, 2026, 2:15 PM" (correct local time)
+    function svFormatLocal(isoUtc) {
+        if (!isoUtc) return '';
+        const d = new Date(isoUtc);
+        if (isNaN(d.getTime())) return isoUtc;
+        const now = new Date();
+        const diffSec = (now - d) / 1000;
+        if (diffSec < 60)  return 'just now';
+        if (diffSec < 3600) return Math.floor(diffSec / 60) + 'm ago';
+        if (diffSec < 86400) return Math.floor(diffSec / 3600) + 'h ago';
+        if (diffSec < 604800) return Math.floor(diffSec / 86400) + 'd ago';
+        return d.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.notif-timestamp[data-utc]').forEach(el => {
+            const s = svFormatLocal(el.getAttribute('data-utc'));
+            if (s) el.textContent = s;
+        });
+    });
+
+    // ── Mark ALL read ─────────────────────────────────────────────
+    async function adminMarkAllRead() {
+        console.log('[Notifications] Calling POST /admin/notifications/mark-all-read');
+        const btn = document.getElementById('adminMarkAllBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Marking…'; }
+
+        try {
+            const res = await fetch('/admin/notifications/mark-all-read', { method: 'POST' });
+            console.log(`[Notifications] mark-all-read response: ${res.status}`);
+            const data = await res.json();
+            console.log('[Notifications] mark-all-read data:', data);
+
+            if (res.ok) {
+                document.querySelectorAll('.notif-row.notif-unread').forEach(el => {
+                    el.classList.remove('notif-unread');
+                    const dot = el.querySelector('span[style*="border-radius:50%"]');
+                    if (dot) dot.remove();
+                });
+                showAdminToast(data.message || '✓ All notifications marked as read');
+                console.log('[Notifications] UI updated — all unread cleared');
+                
+                // Recalculate unread count by reloading page payload
+                setTimeout(() => {
+                    window.location.reload();
+                }, 800);
+            } else {
+                showAdminToast('Failed to mark all as read', 'error');
+            }
+        } catch (err) {
+            console.error('[Notifications] mark-all-read error:', err);
+            showAdminToast('Network error', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '✓ Mark All as Read'; }
+        }
+    }
+
+    // ── Clear ALL ─────────────────────────────────────────────────
+    async function adminClearAll() {
+        if (!confirm('Delete all your notifications? This cannot be undone.')) return;
+        console.log('[Notifications] Calling DELETE /admin/notifications/clear-all');
+        const btn = document.getElementById('adminClearAllBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Clearing…'; }
+
+        try {
+            const res = await fetch('/admin/notifications/clear-all', { method: 'DELETE' });
+            console.log(`[Notifications] clear-all response: ${res.status}`);
+            const data = await res.json();
+            console.log('[Notifications] clear-all data:', data);
+
+            if (res.ok) {
+                const list = document.querySelector('.notifications-list');
+                if (list) list.innerHTML = `
+                    <div style="text-align:center;padding:60px 20px;opacity:0.5;">
+                        <div style="font-size:64px;margin-bottom:15px;">✨</div>
+                        <h3>All Caught Up!</h3>
+                        <p>No notifications at this time.</p>
+                    </div>`;
+                showAdminToast('🗑️ All notifications cleared');
+                console.log('[Notifications] UI updated — list cleared');
+                const markBtn = document.getElementById('adminMarkAllBtn');
+                if (markBtn) { markBtn.disabled = true; markBtn.style.opacity = '0.5'; }
+                if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+            } else {
+                showAdminToast('Failed to clear notifications', 'error');
+            }
+        } catch (err) {
+            console.error('[Notifications] clear-all error:', err);
+            showAdminToast('Network error', 'error');
+        }
+    }
+</script>
+{% endblock %}

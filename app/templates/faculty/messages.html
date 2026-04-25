@@ -1,0 +1,96 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Messages - Faculty{% endblock %}
+{% block page_title %}Messaging Student Portal{% endblock %}
+
+{% block content %}
+<div class="messages-container" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px;">
+    <!-- Send Message -->
+    <div class="section-card">
+        <h2>Send New Message</h2>
+        <form action="/faculty/messages" method="POST">
+            <div class="form-group">
+                <label for="student_id">Select Recipient</label>
+                <select id="student_id" name="student_id" class="form-control" required>
+                    <option value="">Select Student</option>
+                    <option value="all" style="font-weight: bold; color: #11998e;">📢 BROADCAST TO ALL STUDENTS</option>
+                    {% for student in students %}
+                    <option value="{{ student._id }}">{{ student.name }} ({{ student.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <input type="text" id="subject" name="subject" class="form-control"
+                    placeholder="Subject of your message" required>
+            </div>
+
+            <div class="form-group">
+                <label for="content">Message Content</label>
+                <textarea id="content" name="content" class="form-control" rows="6"
+                    placeholder="Write your message here..." required></textarea>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="width: 100%;">📬 Send Message</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recent Conversations / Inbox -->
+    <div class="sent-messages">
+        <div class="section-card">
+            <h2>Recent Conversations</h2>
+            <div
+                style="max-height: 600px; overflow-y: auto; margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
+                {% if conversations %}
+                {% for student_id, conv in conversations.items() %}
+                <a href="/faculty/chat/{{ student_id }}" style="text-decoration: none; color: inherit;">
+                    <div class="conversation-item clickable"
+                        style="padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; background: var(--card); transition: all 0.2s;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div
+                                    style="width: 30px; height: 30px; background: #11998e; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: bold;">
+                                    {{ conv.user.name[0].upper() }}
+                                </div>
+                                <strong style="color: #1e293b;">{{ conv.user.name }}</strong>
+                            </div>
+                            <small style="color: #94a3b8;">{{ conv.last_message.created_at.strftime('%b %d') }}</small>
+                        </div>
+
+                        {% if conv.last_message.subject %}
+                        <div style="font-size: 0.8em; color: #11998e; font-weight: 600; margin-bottom: 5px;">Re: {{
+                            conv.last_message.subject }}</div>
+                        {% endif %}
+
+                        <p
+                            style="font-size: 0.85em; color: #64748b; line-height: 1.4; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {% if conv.last_message.sender_id == user.id %}
+                            <span style="color: #94a3b8;">You: </span>
+                            {% endif %}
+                            {{ conv.last_message.message or conv.last_message.content }}
+                        </p>
+                    </div>
+                </a>
+                {% endfor %}
+                {% else %}
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">📩</div>
+                    <p>No student messages yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .conversation-item.clickable:hover {
+        border-color: #11998e !important;
+        background: #f0fdfa !important;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+</style>{% endblock %}

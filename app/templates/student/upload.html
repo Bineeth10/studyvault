@@ -1,0 +1,135 @@
+{% extends "student/base.html" %}
+
+{% block title %}Upload Notes{% endblock %}
+{% block page_title %}Upload Notes{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="section-card">
+        <h2>📤 Upload Study Materials</h2>
+        <p class="subtitle">Share your notes with fellow students</p>
+
+        <form action="/student/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <p>Click to select files or drag and drop</p>
+                <small>Supported: PDF, JPG, PNG, DOC, DOCX</small>
+                <input type="file" id="fileInput" name="files" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    style="display: none;">
+            </div>
+
+            <div id="filesPreview" class="files-preview"></div>
+
+            <button type="submit" class="btn-submit" id="submitBtn" style="display: none;">
+                Upload Files
+            </button>
+        </form>
+    </div>
+
+    <div class="section-card info-card">
+        <h3>📋 Upload Guidelines</h3>
+        <ul>
+            <li>✅ Use clear, descriptive titles</li>
+            <li>✅ Select appropriate subject</li>
+            <li>✅ Ensure content is original or properly attributed</li>
+            <li>✅ Files will be reviewed before approval</li>
+            <li>❌ No copyrighted materials</li>
+            <li>❌ No inappropriate content</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const filesPreview = document.getElementById('filesPreview');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+
+    let selectedFiles = [];
+
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#667eea';
+        uploadArea.style.background = '#f0f4ff';
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = '#ddd';
+        uploadArea.style.background = '#f9f9f9';
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#ddd';
+        uploadArea.style.background = '#f9f9f9';
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        selectedFiles = Array.from(files);
+        displayFiles();
+    }
+
+    function displayFiles() {
+        filesPreview.innerHTML = '';
+
+        if (selectedFiles.length === 0) {
+            submitBtn.style.display = 'none';
+            return;
+        }
+
+        selectedFiles.forEach((file, index) => {
+            const fileCard = document.createElement('div');
+            fileCard.className = 'file-card';
+            fileCard.innerHTML = `
+                <div class="file-info">
+                    <div class="file-icon">📄</div>
+                    <div class="file-details">
+                        <strong>${file.name}</strong>
+                        <small>${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                    </div>
+                </div>
+                <div class="file-inputs">
+                    <input type="text" name="titles" placeholder="Title" value="${file.name.split('.')[0]}" required>
+                    <select name="subjects" required>
+                        <option value="">Select Subject</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject }}">{{ subject }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="button" class="btn-remove" onclick="removeFile(${index})">×</button>
+            `;
+            filesPreview.appendChild(fileCard);
+        });
+
+        submitBtn.style.display = 'block';
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        displayFiles();
+    }
+
+    uploadForm.addEventListener('submit', (e) => {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+    });
+</script>
+{% endblock %}

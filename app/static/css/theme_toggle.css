@@ -1,0 +1,492 @@
+/* Required Dark Mode Variables */
+:root {
+  --bg: #f5f7fa;
+  --text: #333333;
+  --card: #ffffff;
+  --muted: #6b7280;
+}
+
+[data-theme="dark"], .dark, body.dark-mode {
+  --bg: #0f172a;
+  --text: #e2e8f0;
+  --card: #1e293b;
+  --muted: #94a3b8;
+}
+
+/* Theme Variables & Design Tokens */
+:root {
+    /* Light Mode */
+    --bg-color: #f5f7fa;
+    --text-color: #1e293b;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --topbar-bg: #ffffff;
+    --sidebar-bg: #ffffff;
+    /* Assuming sidebar handles its own, but good to have token */
+    --input-bg: #ffffff;
+    --hover-bg: #f1f5f9;
+    --primary-color: #667eea;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    /* Animation Tokens */
+    --transition-speed: 0.3s;
+    --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+    /* Dark Mode */
+    --bg-color: #0f172a;
+    --text-color: #f1f5f9;
+    --text-muted: #cbd5e1;
+    /* Lightened from #94a3b8 for better readability */
+    --card-bg: #1e293b;
+    --border-color: #475569;
+    /* Lightened from #334155 for better visibility */
+    --topbar-bg: #1e293b;
+    --sidebar-bg: #1e293b;
+    --input-bg: #1e293b;
+    --hover-bg: #334155;
+    --primary-color: #818cf8;
+    /* Lighter primary for dark mode */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Global Transitions */
+body,
+.layout,
+.main-content,
+.sidebar,
+.topbar,
+.section-card,
+.stat-card,
+.role-card,
+input,
+select,
+textarea,
+table,
+th,
+td {
+    transition: background-color var(--transition-speed) var(--transition-ease),
+        color var(--transition-speed) var(--transition-ease),
+        border-color var(--transition-speed) var(--transition-ease),
+        box-shadow var(--transition-speed) var(--transition-ease);
+}
+
+/* Toggle Button */
+.theme-toggle-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed) var(--transition-ease);
+    color: var(--text-muted);
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--hover-bg);
+    color: var(--primary-color);
+}
+
+.theme-icon {
+    font-size: 1.25rem;
+}
+
+.theme-icon::before {
+    content: "🌙";
+}
+
+[data-theme="dark"] .theme-icon::before {
+    content: "☀️";
+}
+
+/* Dark Mode Overrides - Using !important where necessary to override legacy styles */
+body.dark-mode {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+}
+
+body.dark-mode .layout,
+body.dark-mode .main-content {
+    background-color: var(--bg-color) !important;
+}
+
+body.dark-mode .topbar {
+    background-color: var(--topbar-bg) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-sm) !important;
+    color: var(--text-color) !important;
+}
+
+body.dark-mode .topbar h1 {
+    color: var(--text-color) !important;
+}
+
+/* Cards & Components */
+body.dark-mode .section-card,
+body.dark-mode .stat-card,
+body.dark-mode .note-card,
+body.dark-mode .notification-item,
+body.dark-mode .conversation-item,
+body.dark-mode .new-post-form,
+body.dark-mode .ai-tool-card,
+body.dark-mode .guide-tips,
+body.dark-mode .file-card,
+body.dark-mode .info-card,
+body.dark-mode .tool-interface,
+body.dark-mode .activity-item,
+body.dark-mode .modal-content,
+body.dark-mode .faculty-card,
+body.dark-mode .announcement-visual-card,
+body.dark-mode .post-card,
+body.dark-mode .reply-card,
+/* Added Modal support */
+body.dark-mode .tool-output {
+    background: var(--card-bg) !important;
+    /* Use background shorthand to override gradients */
+    background-color: var(--card-bg) !important;
+    background-image: none !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+/* Modals specifically */
+body.dark-mode .modal {
+    background-color: var(--text) !important;
+    /* Darker backdrop */
+}
+
+/* Inputs */
+body.dark-mode input:not([type="file"]),
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2) !important;
+}
+
+body.dark-mode ::placeholder {
+    color: var(--text-muted) !important;
+}
+
+/* Tables */
+body.dark-mode table th {
+    background-color: var(--hover-bg) !important;
+    color: var(--text-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode table td {
+    color: var(--text-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode table tr:hover {
+    background-color: var(--hover-bg) !important;
+}
+
+/* Typography */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+    color: var(--text-color) !important;
+}
+
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode li,
+body.dark-mode label,
+body.dark-mode strong {
+    color: var(--text-color) !important;
+}
+
+body.dark-mode small,
+body.dark-mode .text-muted,
+body.dark-mode .subtitle,
+body.dark-mode .uploader,
+body.dark-mode .note-meta,
+body.dark-mode .timestamp {
+    color: var(--text-muted) !important;
+}
+
+/* AI Assistant Specifics */
+body.dark-mode .ai-tool-card {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+}
+
+body.dark-mode .ai-tool-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg) !important;
+}
+
+body.dark-mode .ai-tool-card p {
+    color: var(--text-muted) !important;
+}
+
+/* Upload Area */
+body.dark-mode .upload-area {
+    background-color: var(--muted);
+    border: 2px dashed var(--border-color) !important;
+}
+
+body.dark-mode .upload-area:hover {
+    background-color: var(--hover-bg) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Fix for invisible borders in lists and footers */
+body.dark-mode .info-card ul li,
+body.dark-mode .note-footer {
+    border-color: var(--border-color) !important;
+}
+
+/* Specific fix for info-card to ensure gradient is removed */
+body.dark-mode .info-card,
+body.dark-mode .section-card.info-card {
+    background: var(--card-bg) !important;
+    background-image: none !important;
+}
+
+/* Accessibility & State Improvements */
+body.dark-mode button:disabled,
+body.dark-mode input:disabled,
+body.dark-mode textarea:disabled,
+body.dark-mode select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-muted) !important;
+    border-color: transparent !important;
+}
+
+body.dark-mode .btn-primary,
+body.dark-mode .btn-action,
+body.dark-mode .badge {
+    color: white !important;
+    /* Ensure text is readable on colored backgrounds */
+}
+
+body.dark-mode a {
+    color: var(--primary-color);
+}
+
+body.dark-mode a:hover {
+    color: #a5b4fc;
+    /* Slightly lighter on hover */
+}
+
+/* Muted Accents for Dark Mode */
+body.dark-mode .announcement-visual-card.priority-urgent {
+    border-left-color: #dc2626;
+    /* Red-600 for less 'loud' appearance */
+}
+
+body.dark-mode .announcement-visual-card.priority-info {
+    border-left-color: #d97706;
+    /* Amber-600 */
+}
+
+body.dark-mode .announcement-visual-card.priority-general {
+    border-left-color: #2563eb;
+    /* Blue-600 */
+}
+
+/* Fix for mixed light and dark backgrounds on the same page */
+.dark .card, .dark-mode .card,
+.dark .section-card, .dark-mode .section-card,
+.dark .stat-card, .dark-mode .stat-card,
+.dark .note-card, .dark-mode .note-card,
+.dark .notification-item, .dark-mode .notification-item,
+.dark .table, .dark-mode .table,
+.dark .row, .dark-mode .row,
+.dark tr, .dark-mode tr,
+.dark td, .dark-mode td,
+.dark th, .dark-mode th {
+    background-color: var(--card);
+    color: var(--text);
+}
+
+/* FIX BADGES & LABELS 
+   Remove opacity-based styling
+   Ensure full visibility in dark mode */
+.dark .badge, .dark-mode .badge,
+.dark .label, .dark-mode .label,
+.dark .badge-warning, .dark-mode .badge-warning,
+.dark .badge-success, .dark-mode .badge-success,
+.dark .badge-danger, .dark-mode .badge-danger {
+    opacity: 1 !important;
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--muted);
+}
+
+
+/* FIX BADGES & LABELS 
+   Ensure full visibility in dark mode */
+.dark .badge-warning, .dark-mode .badge-warning,
+.dark .priority-info, .dark-mode .priority-info {
+    background-color: #78350f !important;
+    color: #fde68a !important;
+    border: 1px solid #b45309 !important;
+}
+
+.dark .badge-success, .dark-mode .badge-success {
+    background-color: #064e3b !important;
+    color: #a7f3d0 !important;
+    border: 1px solid #047857 !important;
+}
+
+.dark .badge-danger, .dark-mode .badge-danger,
+.dark .priority-urgent, .dark-mode .priority-urgent {
+    background-color: #7f1d1d !important;
+    color: #fecaca !important;
+    border: 1px solid #b91c1c !important;
+}
+
+.dark .badge, .dark-mode .badge {
+    opacity: 1 !important;
+}
+
+.dark .badge-role, .dark-mode .badge-role {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569 !important;
+}
+
+
+/* APPLY DARK MODE TO PARENT CONTAINERS */
+.dark .container, .dark-mode .container,
+.dark .section, .dark-mode .section,
+.dark .wrapper, .dark-mode .wrapper,
+.dark .content, .dark-mode .content,
+.dark .main-content, .dark-mode .main-content,
+.dark .layout, .dark-mode .layout,
+.dark .dashboard-grid, .dark-mode .dashboard-grid,
+.dark .browse-container, .dark-mode .browse-container,
+.dark .content-wrapper, .dark-mode .content-wrapper,
+.dark .upload-container, .dark-mode .upload-container,
+.dark .page-wrapper, .dark-mode .page-wrapper {
+    background-color: transparent;
+    color: var(--text);
+}
+
+body.dark, body.dark-mode, [data-theme='dark'] {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+/* Ensure no nested containers force light backgrounds */
+.dark .content, .dark-mode .content {
+    background-color: var(--bg);
+}
+
+
+/* FORUM SPECIFIC COMPONENT THEMING */
+.dark .forum-container, .dark-mode .forum-container,
+.dark .new-post-form, .dark-mode .new-post-form,
+.dark .posts-list, .dark-mode .posts-list,
+.dark .post-card, .dark-mode .post-card,
+.dark .post-zone-header, .dark-mode .post-zone-header,
+.dark .post-zone-body, .dark-mode .post-zone-body,
+.dark .post-zone-footer, .dark-mode .post-zone-footer,
+.dark .replies-container, .dark-mode .replies-container,
+.dark .reply-card, .dark-mode .reply-card,
+.dark .reply-form, .dark-mode .reply-form,
+.dark .reply-input-section, .dark-mode .reply-input-section,
+.dark .reply-item, .dark-mode .reply-item,
+.dark .replies-section, .dark-mode .replies-section,
+.dark .post-header, .dark-mode .post-header,
+.dark .forum-item, .dark-mode .forum-item,
+.dark .reply-box, .dark-mode .reply-box {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border-color, #475569) !important;
+}
+
+/* FIX FORUM INPUT FIELDS */
+.dark input, .dark-mode input,
+.dark textarea, .dark-mode textare,
+.dark .form-control, .dark-mode .form-control,
+.dark .reply-input-field, .dark-mode .reply-input-field {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    border-color: var(--border-color, #475569) !important;
+}
+
+
+/* FIX REMAINING LIGHT PANELS AND HEADERS */
+.dark .topbar, .dark-mode .topbar,
+.dark .side-notif-panel, .dark-mode .side-notif-panel,
+.dark .panel-content, .dark-mode .panel-content,
+.dark .panel-header, .dark-mode .panel-header,
+.dark .review-info-box, .dark-mode .review-info-box,
+.dark .moderation-filter-bar, .dark-mode .moderation-filter-bar,
+.dark .filter-bar-v2, .dark-mode .filter-bar-v2,
+.dark .bg-light, .dark-mode .bg-light,
+.dark .panel, .dark-mode .panel,
+.dark .header-box, .dark-mode .header-box,
+.dark .info-box, .dark-mode .info-box {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+}
+
+/* HIGH SPECIFICITY ROOT DARK MODE AND HEADER OVERRIDES */
+html.dark body, 
+html[data-theme="dark"] body,
+body.dark,
+body.dark-mode {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+html.dark .topbar, html[data-theme="dark"] .topbar, body.dark-mode .topbar,
+html.dark .bg-light, html[data-theme="dark"] .bg-light, body.dark-mode .bg-light,
+html.dark .card-header, html[data-theme="dark"] .card-header, body.dark-mode .card-header,
+html.dark .guide-bar, html[data-theme="dark"] .guide-bar, body.dark-mode .guide-bar,
+html.dark .header-box, html[data-theme="dark"] .header-box, body.dark-mode .header-box,
+html.dark .top-section, html[data-theme="dark"] .top-section, body.dark-mode .top-section,
+html.dark .header-wrapper, html[data-theme="dark"] .header-wrapper, body.dark-mode .header-wrapper,
+html.dark header, html[data-theme="dark"] header, body.dark-mode header,
+html.dark .navbar, html[data-theme="dark"] .navbar, body.dark-mode .navbar {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border-color, #475569) !important;
+}
+
+/* OVERRIDE ALL INLINE BACKGROUNDS IN DARK MODE (USE CAREFULLY) */
+html.dark div[style*="background"], 
+html[data-theme="dark"] div[style*="background"], 
+body.dark-mode div[style*="background"],
+html.dark section[style*="background"], 
+html[data-theme="dark"] section[style*="background"], 
+body.dark-mode section[style*="background"] {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+}
+
+/* KEEP BADGES FROM GETTING OBLITERATED BY DIV[STYLE] RESET IF THEY ARE DIVS */
+html.dark div.badge[style*="background"], 
+html[data-theme="dark"] div.badge[style*="background"], 
+body.dark-mode div.badge[style*="background"] {
+    background-color: transparent !important; /* let specific badge rules take over */
+}

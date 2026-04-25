@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyVault - Index</title>
+    <meta name="description" content="StudyVault deployment homepage and directory.">
+    <!-- Google Fonts for Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Premium Dark Theme Colors */
+            --bg-color: #0B0F19;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --primary: #6366F1;
+            --primary-hover: #4F46E5;
+            --secondary: #A855F7;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* Dynamic animated gradient background */
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.12), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.12), transparent 25%);
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism Navbar */
+        nav {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818CF8, #E879F9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s, text-shadow 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+            text-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 120px 20px 80px;
+            max-width: 900px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #FFFFFF 30%, #94A3B8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-inline: auto;
+        }
+
+        .hero .badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .badge {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #818CF8;
+            font-weight: 500;
+        }
+
+        .badge-alt {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #C084FC;
+        }
+
+        .btn-main {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 16px 36px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-main:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Portals Grid */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px 100px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--text-main);
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 35px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 25px;
+            display: inline-block;
+            background: linear-gradient(135deg, #818CF8, #E879F9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .page-list {
+            list-style: none;
+        }
+
+        .page-list li {
+            margin-bottom: 14px;
+        }
+
+        .page-list a {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0);
+        }
+
+        .page-list a::before {
+            content: '→';
+            margin-right: 12px;
+            font-size: 1rem;
+            color: var(--primary);
+            transition: transform 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .page-list a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .page-list a:hover::before {
+            transform: translateX(3px);
+            opacity: 1;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-muted);
+            background: rgba(11, 15, 25, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+            .nav-links {
+                display: none; /* simple hidden nav for mobile */
+            }
+            .logo {
+                margin: 0 auto;
+            }
+            nav {
+                justify-content: center;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="logo">
+            <span class="logo-icon">📚</span>
+            StudyVault
+        </a>
+        <div class="nav-links">
+            <a href="#auth">Auth</a>
+            <a href="#student">Student</a>
+            <a href="#faculty">Faculty</a>
+            <a href="#admin">Admin</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="badges">
+            <span class="badge">🚀 Static Deployment</span>
+            <span class="badge badge-alt">🎨 UI Preview</span>
+        </div>
+        <h1>Your Gateway to <br>StudyVault</h1>
+        <p>Welcome to the deployment homepage. Navigate through the static HTML files and experience the platform's UI components.</p>
+        <a href="#auth" class="btn-main">Explore Directories</a>
+    </div>
+
+    <div class="container">
+        <h2 class="section-title">Directory Navigation</h2>
+        
+        <div class="grid">
+            <!-- Authentication -->
+            <div class="card" id="auth">
+                <div class="card-icon">🔐</div>
+                <h3>Authentication</h3>
+                <ul class="page-list">
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="register.html">Register</a></li>
+                    <li><a href="roles.html">Role Selection</a></li>
+                    <li><a href="forgot_password.html">Forgot Password</a></li>
+                    <li><a href="reset_password.html">Reset Password</a></li>
+                </ul>
+            </div>
+
+            <!-- Student Portal -->
+            <div class="card" id="student">
+                <div class="card-icon">👨‍🎓</div>
+                <h3>Student Portal</h3>
+                <ul class="page-list">
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="my_notes.html">My Notes</a></li>
+                    <li><a href="browse.html">Browse Notes</a></li>
+                    <li><a href="upload.html">Upload Note</a></li>
+                    <li><a href="forum.html">Community Forum</a></li>
+                    <li><a href="ai_assistant.html">AI Assistant</a></li>
+                    <li><a href="messages.html">Messages</a></li>
+                </ul>
+            </div>
+
+            <!-- Faculty Portal -->
+            <div class="card" id="faculty">
+                <div class="card-icon">👨‍🏫</div>
+                <h3>Faculty Portal</h3>
+                <ul class="page-list">
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="manage_notes.html">Manage Notes</a></li>
+                    <li><a href="approvals.html">Pending Approvals</a></li>
+                    <li><a href="students.html">My Students</a></li>
+                    <li><a href="upload_notes.html">Upload Resources</a></li>
+                    <li><a href="messages.html">Messages</a></li>
+                </ul>
+            </div>
+
+            <!-- Admin Portal -->
+            <div class="card" id="admin">
+                <div class="card-icon">🛡️</div>
+                <h3>Admin Portal</h3>
+                <ul class="page-list">
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="users.html">Manage Users</a></li>
+                    <li><a href="reports.html">System Reports</a></li>
+                    <li><a href="settings.html">System Settings</a></li>
+                    <li><a href="notes.html">All Notes</a></li>
+                    <li><a href="notifications.html">Notifications</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 StudyVault. Automated Static Index.</p>
+    </footer>
+
+    <!-- Interactive micro-animations -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

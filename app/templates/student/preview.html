@@ -1,0 +1,325 @@
+{% extends "student/base.html" %}
+
+{% block title %}Preview Note{% endblock %}
+{% block page_title %}Preview: {{ note.title }}{% endblock %}
+
+{% block content %}
+<div class="preview-container">
+    <div class="section-card">
+        <div class="note-header-preview">
+            <h2>{{ note.title }}</h2>
+            <div class="note-meta-preview">
+                <span class="subject-tag">{{ note.subject }}</span>
+                <span class="uploader">Uploaded by {{ note.uploader_name }}</span>
+                <span class="date">{% if note.uploaded_at %}{{ note.uploaded_at.strftime('%b %d, %Y') }}{% else %}Date
+                    unknown{% endif %}</span>
+            </div>
+        </div>
+
+        <div class="note-actions-preview">
+            <a href="/student/download/{{ note._id }}" class="btn-primary">
+                ⬇️ Download Note
+            </a>
+            <button id="aiSummaryBtn" class="btn-ai" onclick="generateSummary('{{ note._id }}')">
+                🧠 Smart Summary
+            </button>
+            <button onclick="window.close()" class="btn-secondary">
+                ✖️ Close Preview
+            </button>
+        </div>
+
+        <div class="split-summary-layout" id="splitLayout">
+            <div class="note-preview-content">
+                {% if file_ext in ['.pdf'] %}
+                <iframe src="/uploads/{{ note.filename }}" width="100%" height="800px" style="border: none;"></iframe>
+
+                {% elif file_ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'] %}
+                <img src="/uploads/{{ note.filename }}" alt="{{ note.title }}" style="max-width: 100%; height: auto;">
+
+                {% elif file_ext in ['.txt', '.md'] %}
+                <div class="text-preview">
+                    <iframe src="/uploads/{{ note.filename }}" width="100%" height="600px"
+                        style="border: 1px solid #ddd; padding: 20px;"></iframe>
+                </div>
+
+                {% elif file_ext in ['.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'] %}
+                <div class="office-preview">
+                    <div class="preview-notice">
+                        <h3>📄 Office Document</h3>
+                        <p>This is a {{ file_ext }} file. Preview may not be available for all office documents.</p>
+                        <p>Please download the file to view it in its native application.</p>
+                        <a href="/student/download/{{ note._id }}" class="btn-primary">
+                            ⬇️ Download {{ note.original_filename }}
+                        </a>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="no-preview">
+                    <div class="no-preview-icon">📎</div>
+                    <h3>Preview not available</h3>
+                    <p>This file type ({{ file_ext }}) cannot be previewed directly.</p>
+                    <p>Please download the file to view it.</p>
+                    <a href="/student/download/{{ note._id }}" class="btn-primary">
+                        ⬇️ Download {{ note.original_filename }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="aiSummaryBox" class="ai-summary-box hidden">
+                <div class="summary-header">
+                    <h3>🧠 Smart Summary</h3>
+                </div>
+                <div id="summaryContent" class="summary-content">
+                    <!-- Click the button to load the summary -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h3>💡 About This Note</h3>
+        <ul>
+            <li><strong>Subject:</strong> {{ note.subject }}</li>
+            <li><strong>Uploaded by:</strong> {{ note.uploader_name }}</li>
+            <li><strong>Upload Date:</strong> {% if note.uploaded_at %}{{ note.uploaded_at.strftime('%B %d, %Y at %I:%M
+                %p') }}{% else %}Date unknown{% endif %}</li>
+            <li><strong>File Type:</strong> {{ file_ext }}</li>
+            <li><strong>Status:</strong> <span class="status-approved">Approved ✓</span></li>
+            {% if note.reviewed_by_name or note.reviewed_by %}
+            <li><strong>Reviewed by:</strong> {{ note.reviewed_by_name or note.reviewed_by or 'Faculty' }}
+                on {{ (note.reviewed_at or note.approved_at or note.uploaded_at).strftime('%B %d, %Y') }}</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function generateSummary(noteId) {
+        const btn = document.getElementById('aiSummaryBtn');
+        const box = document.getElementById('aiSummaryBox');
+        const content = document.getElementById('summaryContent');
+
+        // Show box and loading state
+        box.classList.remove('hidden');
+        content.innerHTML = `
+            <div class="ai-loader">
+                <div class="spinner"></div>
+                <p>Analyzing study material and generating your Smart Summary... This may take a few seconds.</p>
+            </div>
+        `;
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Processing...";
+
+        try {
+            const response = await fetch(`/student/generate-summary/${noteId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.summary) {
+                // Formatting bullet points and bold headers for a nicer look
+                let formattedSummary = data.summary
+                    .replace(/\n/g, '<br>')
+                    .replace(/(1️⃣|2️⃣|3️⃣|4️⃣)/g, '<br><strong>$1</strong>')
+                    .replace(/(60-Second Overview|10 Key Bullet Points|Must-Remember Topics|High-Probability Questions)/g, '<strong>$1</strong>');
+
+                content.innerHTML = formattedSummary;
+                btn.innerHTML = "✅ Summary Ready";
+            } else {
+                const errorMsg = data.error || data.detail || 'Failed to generate summary. Please try again later.';
+                content.innerHTML = `<p class="error-text">❌ ${errorMsg}</p>`;
+                btn.innerHTML = "🧠 Smart Summary";
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error generating summary:', error);
+            content.innerHTML = `<p class="error-text">❌ Connection error. Please check your internet.</p>`;
+            btn.innerHTML = "🧠 Smart Summary";
+            btn.disabled = false;
+        }
+    }
+</script>
+
+<style>
+    .preview-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-bottom: 50px;
+    }
+
+    .split-summary-layout {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+        transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .note-preview-content {
+        flex: 1;
+        min-width: 0;
+        background: var(--card);
+        padding: 5px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .note-preview-content {
+        background: #1e293b;
+    }
+
+    .ai-summary-box {
+        width: 380px;
+        flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 20px;
+        max-height: 85vh;
+        overflow-y: auto;
+        animation: slideInRight 0.5s ease;
+    }
+
+    [data-theme="dark"] .ai-summary-box {
+        background: #1e293b;
+        border-color: #334155;
+        color: #f1f5f9;
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .summary-header {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 12px;
+        margin-bottom: 15px;
+    }
+
+    [data-theme="dark"] .summary-header {
+        border-color: #334155;
+    }
+
+    .btn-ai {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Original Styles preservation */
+    .note-header-preview {
+        margin-bottom: 20px;
+    }
+
+    .note-meta-preview {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    .note-meta-preview span {
+        padding: 5px 15px;
+        background: #f0f0f0;
+        border-radius: 15px;
+        font-size: 14px;
+    }
+
+    [data-theme="dark"] .note-meta-preview span {
+        background: #334155;
+        color: #cbd5e1;
+    }
+
+    .subject-tag {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+    }
+
+    .note-actions-preview {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .summary-content {
+        line-height: 1.7;
+        font-size: 15px;
+    }
+
+    .ai-loader {
+        text-align: center;
+        padding: 20px;
+        color: #64748b;
+    }
+
+    .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #764ba2;
+        border-radius: 50%;
+        margin: 0 auto 10px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-text {
+        color: #e74c3c;
+        font-size: 14px;
+    }
+
+    @media (max-width: 1100px) {
+        .split-summary-layout {
+            flex-direction: column;
+        }
+
+        .ai-summary-box {
+            width: 100%;
+            position: static;
+            order: -1;
+            /* Summary above PDF on mobile if shown */
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}

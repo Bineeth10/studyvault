@@ -1,0 +1,28 @@
+{
+  "pythonVersion": "3.11",
+  "pythonPlatform": "Windows",
+  "pythonPath": "C:/Users/Lenovo/studyvault/venv/Scripts/python.exe",
+  "venvPath": "C:/Users/Lenovo/studyvault",
+  "venv": "venv",
+  "extraPaths": [
+    "C:/Users/Lenovo/studyvault",
+    "C:/Users/Lenovo/studyvault/venv/Lib/site-packages"
+  ],
+  "exclude": ["**/node_modules", "**/__pycache__", "**/tmp", "**/venv"],
+  "typeCheckingMode": "off",
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportMissingTypeStubs": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownParameterType": "none",
+  "reportOperatorIssue": "none",
+  "reportIndexIssue": "none",
+  "reportArgumentType": "none",
+  "reportCallIssue": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportReturnType": "none",
+  "useLibraryCodeForTypes": true,
+  "autoSearchPaths": true
+}

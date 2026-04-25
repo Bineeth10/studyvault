@@ -1,0 +1,99 @@
+{% extends "student/base.html" %}
+
+{% block title %}Messages{% endblock %}
+{% block page_title %}Messages{% endblock %}
+
+{% block content %}
+<style>
+    .conversation-item.clickable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+    }
+
+    .conversation-item.clickable:hover {
+        background: #f0f4ff;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .message-subject-tag {
+        font-size: 0.85em;
+        color: #11998e;
+        background: #e6fffa;
+        padding: 2px 8px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .last-message-text {
+        color: #64748b;
+        font-size: 0.95em;
+        line-height: 1.4;
+    }
+
+    .conversation-avatar {
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+    }
+</style>
+<div class="messages-container">
+    <div class="section-card">
+        <h2>💬 Messages</h2>
+
+        {% if conversations %}
+        <div class="conversations-list">
+            {% for user_id, conversation in conversations.items() %}
+            <a href="/student/chat/{{ user_id }}" class="conversation-link"
+                style="text-decoration: none; color: inherit;">
+                <div class="conversation-item clickable">
+                    <div class="conversation-avatar">
+                        {{ conversation.user.name[0].upper() }}
+                    </div>
+                    <div class="conversation-content">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <h4>{{ conversation.user.name }}</h4>
+                            <small>{{ conversation.last_message.created_at.strftime('%b %d') }}</small>
+                        </div>
+                        {% if conversation.last_message.subject %}
+                        <div class="message-subject-tag">Subject: {{ conversation.last_message.subject }}</div>
+                        {% endif %}
+                        <p class="last-message-text">
+                            {% if conversation.last_message.message %}
+                            {{ conversation.last_message.message[:80]|default('') }}{% if
+                            conversation.last_message.message|length > 80 %}...{% endif %}
+                            {% elif conversation.last_message.content %}
+                            {{ conversation.last_message.content[:80]|default('') }}{% if
+                            conversation.last_message.content|length > 80 %}...{% endif %}
+                            {% else %}
+                            No content
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-data-state">
+            <div class="no-data-icon">💬</div>
+            <h3>No messages yet</h3>
+            <p>Start a conversation with your peers</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section-card info-card">
+        <h3>📋 Messaging Guidelines</h3>
+        <ul>
+            <li>✅ Be respectful and professional</li>
+            <li>✅ Keep conversations academic</li>
+            <li>✅ Response time may vary</li>
+            <li>❌ No spam or inappropriate content</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

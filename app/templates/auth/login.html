@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - StudyVault</title>
+    <!-- Theme Support -->
+    <script src="/static/js/theme_toggle.js"></script>
+    <style>
+        /* CSS Variables will come from theme_toggle.js/css injection if present, 
+           but since this is a standalone page, we might need the base styles. 
+           However, let's just make it adapt by simulating the theme vars or linking the css file. 
+           It's better to link the CSS file. */
+    </style>
+    <link rel="stylesheet" href="/static/css/theme_toggle.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Dark Mode Body Override */
+        body.dark-mode {
+            background: linear-gradient(-45deg, #1e1b4b, #312e81, #1e293b, #0f172a) !important;
+            background-size: 400% 400%;
+        }
+
+        .container {
+            background: var(--card-bg, white);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px 40px;
+            max-width: 450px;
+            width: 100%;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1 {
+            color: var(--text-color, #333);
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--text-muted, #666);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: var(--text-color, #333);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color, #e0e0e0);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background-color: var(--input-bg, #fff);
+            color: var(--text-color, #333);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted, #666);
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        /* ── Alert boxes ─────────────────────────────────────────── */
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 0.92em;
+            line-height: 1.5;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #15803d;
+        }
+
+        .alert-icon {
+            font-size: 1.15em;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .alert-body strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .btn-goto-roles {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #d97706;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85em;
+            transition: background 0.2s;
+        }
+
+        .btn-goto-roles:hover {
+            background: #b45309;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="/roles">← Back to role selection</a>
+        </div>
+
+        <h1>🎓 Login as {{ role|title }}</h1>
+        <p class="subtitle">Welcome back to StudyVault</p>
+
+        {% if error %}
+        <div class="alert alert-error">
+            <span class="alert-icon">❌</span>
+            <div class="alert-body">{{ error }}</div>
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">
+            <span class="alert-icon">✅</span>
+            <div class="alert-body">{{ success }}</div>
+        </div>
+        {% endif %}
+
+        <style>
+            .password-wrapper {
+                position: relative;
+            }
+
+            .toggle-password {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+                color: var(--muted);
+                font-size: 1.2em;
+                user-select: none;
+            }
+        </style>
+
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required>
+                    <span class="toggle-password" id="eyeIcon">👁️</span>
+                </div>
+                {% if role|lower != 'admin' %}
+                <div style="text-align: right; margin-top: 8px;">
+                    <a href="/forgot-password" style="color: #667eea; text-decoration: none; font-size: 0.88em; font-weight: 600;">
+                        Forgot Password?
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn-submit">Login</button>
+        </form>
+
+        <script>
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const eyeClosed = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+            // Set initial icon
+            eyeIcon.innerHTML = eyeOpen;
+
+            eyeIcon.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                eyeIcon.innerHTML = type === 'password' ? eyeOpen : eyeClosed;
+            });
+        </script>
+
+        {% if role|lower == 'admin' %}
+        <div class="register-link">
+            <span style="color: var(--muted); font-size: 0.88em;">🔒 Admin Access Only &mdash; accounts are provisioned by the system administrator.</span>
+        </div>
+        {% elif registrations_enabled %}
+        <div class="register-link">
+            Don't have an account? <a href="/register">Register</a>
+        </div>
+        {% else %}
+        <div class="register-link">
+            <span style="color: var(--muted);">Registrations are currently closed.</span>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

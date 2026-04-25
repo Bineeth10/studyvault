@@ -1,0 +1,72 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Manage Notes - Faculty{% endblock %}
+{% block page_title %}My Uploaded Materials{% endblock %}
+
+{% block content %}
+<div class="manage-container">
+    <!-- Filter Bar -->
+    <div class="section-card"
+        style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+        <div class="filters">
+            <form action="/faculty/manage-notes" method="GET" style="display: flex; gap: 15px;">
+                <select name="subject" class="form-control" onchange="this.form.submit()" style="width: auto;">
+                    <option value="">All Subjects</option>
+                    {% for sub in subjects %}
+                    <option value="{{ sub }}" {% if current_subject==sub %}selected{% endif %}>{{ sub }}</option>
+                    {% endfor %}
+                </select>
+                <a href="/faculty/manage-notes" class="btn-primary" style="background: #94a3b8;">Clear Filters</a>
+            </form>
+        </div>
+        <a href="/faculty/upload" class="btn-primary">+ Add New Material</a>
+    </div>
+
+    <!-- Notes List -->
+    <div class="section-card">
+        <div class="table-container">
+            {% if notes %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Subject</th>
+                        <th>File</th>
+                        <th>Date Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes %}
+                    <tr>
+                        <td><strong>{{ note.title }}</strong></td>
+                        <td><span class="subject-badge"
+                                style="background: #e2e8f0; padding: 4px 10px; border-radius: 12px; font-size: 0.85em;">{{
+                                note.subject }}</span></td>
+                        <td><a href="/uploads/{{ note.filename or note.file_name }}" target="_blank"
+                                style="color: #11998e;">📄 View File</a></td>
+                        <td>{% if note.uploaded_at %}{{ note.uploaded_at.strftime('%b %d, %Y') }}{% else %}Date
+                            unknown{% endif %}</td>
+                        <td>
+                            <div style="display: flex; gap: 10px;">
+                                <a href="/faculty/edit-note/{{ note._id }}" class="btn-primary"
+                                    style="padding: 5px 10px; font-size: 0.85em; background: #3498db;">Edit</a>
+                                <a href="/faculty/delete-note/{{ note._id }}" class="btn-danger btn-delete"
+                                    style="padding: 5px 10px; font-size: 0.85em;">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 40px;">
+                <div style="font-size: 50px; opacity: 0.3;">📁</div>
+                <h3>No materials uploaded yet</h3>
+                <p>Click "Add New Material" to start sharing resources with your students.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

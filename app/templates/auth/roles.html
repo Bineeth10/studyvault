@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Role - StudyVault</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --student-color: #3b82f6;
+            --faculty-color: #10b981;
+            --admin-color: #f43f5e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Premium University Portal Gradient */
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #6dd5ed 100%);
+            background-size: 300% 300%;
+            animation: gradientBG 20s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            background: var(--card);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #1e293b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1em;
+            margin-bottom: 50px;
+        }
+
+        .role-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .role-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 40px 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e1;
+        }
+
+        /* Selected State */
+        .role-card.selected {
+            border-color: var(--primary);
+            background: var(--card);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .role-card.selected::after {
+            content: "✔";
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Role Specific Colors when selected */
+        .role-card[data-role="student"].selected {
+            border-color: var(--student-color);
+        }
+
+        .role-card[data-role="student"].selected::after {
+            background: var(--student-color);
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .role-card[data-role="faculty"].selected {
+            border-color: var(--faculty-color);
+        }
+
+        .role-card[data-role="faculty"].selected::after {
+            background: var(--faculty-color);
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .role-card[data-role="admin"].selected {
+            border-color: var(--admin-color);
+        }
+
+        .role-card[data-role="admin"].selected::after {
+            background: var(--admin-color);
+            box-shadow: 0 4px 10px rgba(244, 63, 94, 0.3);
+        }
+
+        .role-icon {
+            margin-bottom: 25px;
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .role-card:hover .role-icon {
+            transform: scale(1.05);
+        }
+
+        .role-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+
+        .role-desc {
+            font-size: 0.95em;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Continue Button */
+        .btn-continue {
+            background: #cbd5e1;
+            color: #fff;
+            border: none;
+            padding: 16px 60px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: not-allowed;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: none;
+        }
+
+        .btn-continue:not(:disabled) {
+            cursor: pointer;
+            transform: translateY(0);
+        }
+
+        .btn-continue:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Dynamic Button Colors */
+        .btn-continue.btn-student {
+            background: var(--student-color);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-continue.btn-faculty {
+            background: var(--faculty-color);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-continue.btn-admin {
+            background: var(--admin-color);
+            box-shadow: 0 10px 25px rgba(244, 63, 94, 0.3);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            80% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Focus Accessibility */
+        .role-card:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <!-- Auto Theme Detection -->
+    <script src="/static/js/theme_toggle.js"></script>
+
+    <style>
+        /* Glassmorphism & Visuals */
+        .container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 60px 40px;
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        /* Floating Blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.7;
+            animation: floatBlob 20s infinite alternate;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: #60a5fa;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: #a78bfa;
+            animation-delay: -5s;
+        }
+
+        @keyframes floatBlob {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(30px, 50px) scale(1.1);
+            }
+        }
+
+        /* Noise Texture */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        /* Dark Mode Overrides for Roles Page */
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            background-size: 300% 300%;
+            animation: gradientBG 20s ease infinite;
+        }
+
+        body.dark-mode .container {
+            background: rgba(30, 41, 59, 0.7);
+            /* Darker glass */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        body.dark-mode h1 {
+            color: #f1f5f9;
+        }
+
+        body.dark-mode .subtitle {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .role-card {
+            background: rgba(30, 41, 59, 0.6);
+            border-color: #334155;
+        }
+
+        body.dark-mode .role-card:hover {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: #475569;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .role-title {
+            color: #f1f5f9;
+        }
+
+        body.dark-mode .role-desc {
+            color: #cbd5e1;
+        }
+
+        /* Keep selected state vibrant in dark mode */
+        body.dark-mode .role-card.selected {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        body.dark-mode .blob-1 {
+            opacity: 0.4;
+        }
+
+        body.dark-mode .blob-2 {
+            opacity: 0.4;
+        }
+    </style>
+
+<body>
+    <!-- Background Elements -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="noise-overlay"></div>
+
+    <div class="container">
+        <h1>🎓 StudyVault</h1>
+        <!-- ... content continues ... -->
+        <p class="subtitle">Select your role to continue</p>
+
+        <form id="roleForm" action="/select-role" method="POST">
+            <div class="role-cards">
+                <div class="role-card" data-role="student" onclick="selectRole('student')" tabindex="0"
+                    onkeypress="if(event.key === 'Enter') selectRole('student')">
+                    <div class="role-icon">
+                        <lottie-player src="https://assets10.lottiefiles.com/packages/lf20_jcikwtux.json"
+                            background="transparent" speed="1" loop autoplay></lottie-player>
+                    </div>
+                    <div class="role-title">Student</div>
+                    <div class="role-desc">Upload and browse study materials</div>
+                </div>
+
+                <div class="role-card" data-role="faculty" onclick="selectRole('faculty')" tabindex="0"
+                    onkeypress="if(event.key === 'Enter') selectRole('faculty')">
+                    <div class="role-icon">
+                        <lottie-player src="https://assets2.lottiefiles.com/packages/lf20_u4jjb9bd.json"
+                            background="transparent" speed="1" loop autoplay></lottie-player>
+                    </div>
+                    <div class="role-title">Faculty</div>
+                    <div class="role-desc">Approve and manage notes</div>
+                </div>
+
+                <div class="role-card" data-role="admin" onclick="selectRole('admin')" tabindex="0"
+                    onkeypress="if(event.key === 'Enter') selectRole('admin')">
+                    <div class="role-icon">
+                        <lottie-player src="https://assets10.lottiefiles.com/packages/lf20_qp1q7mct.json"
+                            background="transparent" speed="1" loop autoplay></lottie-player>
+                    </div>
+                    <div class="role-title">Admin</div>
+                    <div class="role-desc">System management</div>
+                </div>
+            </div>
+
+            <input type="hidden" name="role" id="roleInput" value="">
+            <button type="submit" class="btn-continue" id="continueBtn" disabled>Continue</button>
+        </form>
+
+
+    </div>
+
+    <div id="tsparticles"></div>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.0.6/tsparticles.slim.bundle.min.js"></script>
+    <script>
+        // ... existing particle script ...
+        document.addEventListener('DOMContentLoaded', async () => {
+            // ... existing particle code ...
+            // Respect reduced motion preference
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (prefersReducedMotion) return;
+
+            await tsParticles.load("tsparticles", {
+                fpsLimit: 60,
+                particles: {
+                    number: {
+                        value: 40,
+                        density: {
+                            enable: true,
+                            value_area: 800
+                        }
+                    },
+                    color: {
+                        value: "#ffffff"
+                    },
+                    shape: {
+                        type: "circle"
+                    },
+                    opacity: {
+                        value: 0.3,
+                        random: true,
+                        anim: {
+                            enable: true,
+                            speed: 1,
+                            opacity_min: 0.1,
+                            sync: false
+                        }
+                    },
+                    size: {
+                        value: 3,
+                        random: true,
+                        anim: {
+                            enable: false,
+                            speed: 40,
+                            size_min: 0.1,
+                            sync: false
+                        }
+                    },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: "#ffffff",
+                        opacity: 0.2,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 1.5,
+                        direction: "none",
+                        random: false,
+                        straight: false,
+                        out_mode: "out",
+                        attract: {
+                            enable: false,
+                            rotateX: 600,
+                            rotateY: 1200
+                        }
+                    }
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: {
+                            enable: false // Disable hover interaction for calmness
+                        },
+                        onclick: {
+                            enable: false // Disable click interaction
+                        },
+                        resize: true
+                    }
+                },
+                retina_detect: true,
+                fullScreen: {
+                    enable: true,
+                    zIndex: -1 // Behind everything
+                }
+            });
+        });
+
+        // Role Selection Logic
+        let selectedRole = '';
+
+        function selectRole(role) {
+            selectedRole = role;
+            document.getElementById('roleInput').value = role;
+
+            // Update UI Cards
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            const selectedCard = document.querySelector(`.role-card[data-role="${role}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+
+            // Update Button
+            const btn = document.getElementById('continueBtn');
+            btn.disabled = false;
+
+            // Remove old role classes
+            btn.classList.remove('btn-student', 'btn-faculty', 'btn-admin');
+
+            // Add new role class
+            btn.classList.add(`btn-${role}`);
+
+            // Dynamic Text
+            const roleNames = {
+                'student': 'Continue as Student',
+                'faculty': 'Continue as Faculty',
+                'admin': 'Continue as Admin'
+            };
+            btn.textContent = roleNames[role];
+        }
+    </script>
+</body>
+
+</html>

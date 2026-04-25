@@ -1,0 +1,130 @@
+{% extends "student/base.html" %}
+
+{% block title %}Faculty Directory{% endblock %}
+{% block page_title %}Faculty Directory{% endblock %}
+
+{% block content %}
+<div class="faculty-container">
+    <div class="section-card">
+        <div class="faculty-header-container"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h2>Connect with Faculty</h2>
+                <p style="color: #64748b; margin-bottom: 0;">Reach out to instructors for academic support and guidance.
+                </p>
+            </div>
+
+            <div class="filter-controls" style="display: flex; gap: 10px;">
+                <select id="subjectFilter" class="form-control"
+                    style="padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 200px;">
+                    <option value="">All Subjects</option>
+                    {% if subjects %}
+                    {% for subject in subjects %}
+                    <option value="{{ subject.name }}">{{ subject.name }}</option>
+                    {% endfor %}
+                    {% else %}
+                    <!-- Fallback subjects if DB list empty -->
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="English">English</option>
+                    <option value="History">History</option>
+                    <option value="Economics">Economics</option>
+                    {% endif %}
+                </select>
+            </div>
+        </div>
+
+        <div class="faculty-grid" id="facultyGrid"
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            {% if faculty_list %}
+            {% for faculty in faculty_list %}
+
+            {% set handled_subjects = [] %}
+            {% if faculty.subjects %}
+            {% set handled_subjects = faculty.subjects %}
+            {% else %}
+            {% if faculty.primary_subject %}{% set _ = handled_subjects.append(faculty.primary_subject) %}{% endif %}
+            {% if faculty.secondary_subject %}{% set _ = handled_subjects.append(faculty.secondary_subject) %}{% endif
+            %}
+            {% endif %}
+
+            <div class="faculty-card" data-subjects="{{ handled_subjects | join(',') | lower }}">
+                <div class="faculty-header">
+                    <div class="faculty-avatar-large">
+                        {{ faculty.name[0].upper() }}
+                    </div>
+                    <div class="faculty-info">
+                        <h3>{{ faculty.name }}</h3>
+                        <p class="faculty-department">
+                            {{ handled_subjects | join(', ') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="faculty-contact">
+                    <p>📧 {{ faculty.email }}</p>
+                    <p>🎓 Professor / Instructor</p>
+                </div>
+                <!-- Action button logic can go here if needed -->
+                <a href="/student/chat/{{ faculty._id }}" class="btn-primary"
+                    style="display: block; text-align: center; background: #11998e; text-decoration: none;">
+                    💬 Send Message
+                </a>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="no-faculty-msg" style="text-align: center; grid-column: 1 / -1; padding: 50px; color: #94a3b8;">No
+                faculty members found
+                in the directory.</p>
+            {% endif %}
+
+            <p id="noResultsMsg"
+                style="display: none; text-align: center; grid-column: 1 / -1; padding: 50px; color: #94a3b8;">
+                No faculty found for the selected subject.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .faculty-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-color: #11998e !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filter = document.getElementById('subjectFilter');
+        const grid = document.getElementById('facultyGrid');
+        const cards = document.querySelectorAll('.faculty-card');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+
+        filter.addEventListener('change', function () {
+            const selectedSubject = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const subjects = card.getAttribute('data-subjects') || '';
+
+                if (selectedSubject === '' || subjects.includes(selectedSubject)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (visibleCount === 0 && cards.length > 0) {
+                noResultsMsg.style.display = 'block';
+            } else {
+                noResultsMsg.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

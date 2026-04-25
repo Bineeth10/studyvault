@@ -1,0 +1,82 @@
+{% extends "student/base.html" %}
+
+{% block title %}Saved Notes{% endblock %}
+{% block page_title %}Favorites{% endblock %}
+
+{% block content %}
+<div class="section-card">
+    <h2>❤️ Your Saved Notes</h2>
+
+    {% if notes %}
+    <div class="notes-grid">
+        {% for note in notes %}
+        <div class="note-card">
+            <div class="note-header">
+                <h3>{{ note.title }}</h3>
+                <button class="btn-favorite favorited" onclick="toggleFavorite('{{ note._id }}', this)">
+                    ❤️
+                </button>
+            </div>
+            <div class="note-meta">
+                <span class="subject-tag">{{ note.subject }}</span>
+                <span class="uploader">By {{ note.uploader_name }}</span>
+            </div>
+            <div class="note-footer">
+                <small>{% if note.uploaded_at %}{{ note.uploaded_at.strftime('%b %d, %Y') }}{% else %}Date unknown{%
+                    endif %}</small>
+                <div class="note-actions">
+                    <a href="/student/preview/{{ note._id }}" class="btn-action" target="_blank">
+                        👁️ Preview
+                    </a>
+                    <a href="/student/download/{{ note._id }}" class="btn-action">
+                        ⬇️ Download
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-data-state">
+        <div class="no-data-icon">💔</div>
+        <h3>No saved notes yet</h3>
+        <p>Browse and save notes you find useful</p>
+        <a href="/student/browse" class="btn-primary">Browse Notes</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function toggleFavorite(noteId, btn) {
+        try {
+            const response = await fetch(`/student/favorite/${noteId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.favorited) {
+                btn.classList.add('favorited');
+            } else {
+                btn.classList.remove('favorited');
+                // Remove card from view
+                btn.closest('.note-card').remove();
+
+                // Check if no cards left
+                const notesGrid = document.querySelector('.notes-grid');
+                if (notesGrid && notesGrid.children.length === 0) {
+                    location.reload();
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    }
+</script>
+{% endblock %}

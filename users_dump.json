@@ -1,0 +1,162 @@
+[
+  {
+    "name": "S001",
+    "email": "S001@gmail.com",
+    "role": "student"
+  },
+  {
+    "name": "Bineeth Baby",
+    "email": "bineethbaby2005@gmail.com",
+    "role": "student"
+  },
+  {
+    "name": "steve mathew",
+    "email": "steve@gmail.com",
+    "role": "faculty"
+  },
+  {
+    "name": "A001",
+    "email": "A001@studyvault.com",
+    "role": "admin"
+  },
+  {
+    "name": "albin sv",
+    "email": "bineethbaby46@gmail.com",
+    "role": "admin"
+  },
+  {
+    "name": "james jose",
+    "email": "james@gmail.com",
+    "role": "student"
+  },
+  {
+    "name": "joseph",
+    "email": "joseph@gmail.com",
+    "role": "faculty"
+  },
+  {
+    "name": "F002",
+    "email": "f002@gmail.com",
+    "role": "faculty"
+  },
+  {
+    "name": "F003",
+    "email": "f003@gmail.com",
+    "role": "faculty"
+  },
+  {
+    "name": "F004",
+    "email": "f004@gmail.com",
+    "role": "faculty"
+  },
+  {
+    "name": "DarkQuery6683",
+    "email": "dark@gmail.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test22@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test223@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test224@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test225@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test226@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test227@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test228@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test229@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test2245@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test22456@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test Admin",
+    "email": "admin@test.com",
+    "role": "admin"
+  },
+  {
+    "name": "Test1",
+    "email": "test_x4@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test1",
+    "email": "test_x13@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Browser Test Case",
+    "email": "test_browser_off@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Bypass Attempt",
+    "email": "bypassfinal@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test Student",
+    "email": "student@studyvault.com",
+    "role": "student"
+  },
+  {
+    "name": "Dr. Arjun Varma",
+    "email": "arjun.varma@test.com",
+    "role": "faculty"
+  },
+  {
+    "name": "Test Student",
+    "email": "test_student@test.com",
+    "role": "student"
+  },
+  {
+    "name": "Test Faculty",
+    "email": "test_faculty@test.com",
+    "role": "faculty"
+  },
+  {
+    "name": "Test Admin",
+    "email": "test_admin@test.com",
+    "role": "admin"
+  },
+  {
+    "name": "student25",
+    "email": "student25@gmail.cm",
+    "role": "student"
+  }
+]

@@ -1,0 +1,183 @@
+{% extends "student/base.html" %}
+
+{% block title %}Announcements{% endblock %}
+{% block page_title %}Official Announcements{% endblock %}
+
+{% block content %}
+<div class="announcements-container">
+    <div class="section-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2>📢 Campus Announcements</h2>
+            <p style="color: #64748b;">Stay informed about important campus updates and academic notices.</p>
+        </div>
+
+        {% if announcements %}
+        <div class="announcements-list" style="display: flex; flex-direction: column; gap: 20px;">
+            {% for announcement in announcements %}
+            {% set priority = announcement.priority if announcement.priority else 'general' %}
+            <div class="announcement-visual-card priority-{{ priority }}" data-id="{{ announcement._id }}" tabindex="0"
+                onclick="markCardRead(this)">
+                <div class="ann-header">
+                    <div class="ann-title-group">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <h3 class="ann-title" style="margin: 0;">{{ announcement.title }}</h3>
+                            <span class="priority-badge {{ priority }}">
+                                {{ priority|upper }}
+                            </span>
+                        </div>
+                        <div class="ann-badges" id="badge-{{ announcement._id }}" style="display: none;"><span
+                                class="badge-new">NEW</span></div>
+                    </div>
+                    <div class="ann-date">
+                        {{ announcement.created_at.strftime('%b %d, %Y') }}
+                    </div>
+                </div>
+
+                <div class="ann-body">
+                    <div class="ann-content-clamped" id="ann-content-{{ loop.index }}" style="white-space: pre-line;">{{
+                        announcement.message }}</div>
+                    {% if announcement.message|length > 200 %}
+                    <button class="read-more-btn"
+                        onclick="event.stopPropagation(); toggleAnnouncement('ann-content-{{ loop.index }}', this)">Read
+                        more</button>
+                    {% endif %}
+                </div>
+
+                <div class="ann-footer">
+                    {% set faculty_name = announcement.get('faculty_name') or announcement.get('author_name') or
+                    'Faculty' %}
+                    {% set role = announcement.get('author_role', 'faculty') %}
+
+                    <div class="ann-author">
+                        <div class="ann-author-avatar" {% if role=='admin' %}style="background: #333;" {% endif %}>
+                            {{ faculty_name[0].upper() }}
+                        </div>
+                        <div class="ann-author-info">
+                            <span>{{ faculty_name }}</span>
+                            <span class="badge-role" {% if role=='admin' %}style="background: #333; color: white;" {%
+                                endif %}>
+                                {{ role|capitalize }}
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Optional Attachment Icon -->
+                    <!-- <div class="ann-attachments">📎 1 Attachment</div> -->
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 60px;">
+            <div style="font-size: 60px; margin-bottom: 20px;">📢</div>
+            <h3>No announcements yet</h3>
+            <p>You're all caught up! Check back later for updates from faculty.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Priority Card Borders */
+    .announcement-visual-card {
+        border-left: 5px solid #ccc;
+        transition: transform 0.2s;
+    }
+
+    .priority-urgent {
+        border-left-color: #ef4444 !important;
+        background: linear-gradient(to right, rgba(239, 68, 68, 0.02), transparent);
+    }
+
+    .priority-info {
+        border-left-color: #eab308 !important;
+        background: linear-gradient(to right, rgba(234, 179, 8, 0.02), transparent);
+    }
+
+    .priority-general {
+        border-left-color: #3b82f6 !important;
+        background: linear-gradient(to right, rgba(59, 130, 246, 0.02), transparent);
+    }
+
+    /* Priority Badges */
+    .priority-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 6px;
+        line-height: 1;
+        display: inline-block;
+    }
+
+    .priority-badge.urgent {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .priority-badge.info {
+        color: #b45309;
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .priority-badge.general {
+        color: #2563eb;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    [data-theme="dark"] .priority-badge.info {
+        color: #fbbf24;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.announcement-visual-card');
+        const readIds = JSON.parse(localStorage.getItem('read_announcements') || '[]');
+
+        cards.forEach(card => {
+            const id = card.getAttribute('data-id');
+            if (readIds.includes(id)) {
+                card.classList.add('read');
+            } else {
+                const badge = card.querySelector('.ann-badges');
+                if (badge) badge.style.display = 'block';
+            }
+        });
+    });
+
+    function markCardRead(card) {
+        if (card.classList.contains('read')) return;
+
+        card.classList.add('read');
+        const id = card.getAttribute('data-id');
+        const badge = card.querySelector('.ann-badges');
+        if (badge) badge.style.display = 'none';
+
+        const readIds = JSON.parse(localStorage.getItem('read_announcements') || '[]');
+        if (!readIds.includes(id)) {
+            readIds.push(id);
+            localStorage.setItem('read_announcements', JSON.stringify(readIds));
+        }
+    }
+
+    function toggleAnnouncement(contentId, btn) {
+        const content = document.getElementById(contentId);
+        const card = btn.closest('.announcement-visual-card');
+
+        // Also mark as read when expanding
+        markCardRead(card);
+
+        if (content.classList.contains('ann-content-clamped')) {
+            content.classList.remove('ann-content-clamped');
+            btn.innerText = 'Show less';
+        } else {
+            content.classList.add('ann-content-clamped');
+            btn.innerText = 'Read more';
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "student/base.html" %}
+
+{% block title %}Browse Notes{% endblock %}
+{% block page_title %}Browse Notes{% endblock %}
+
+{% block content %}
+<div class="browse-container">
+    <div class="browse-header">
+        <h2>🔍 Browse Study Materials</h2>
+        <div class="filter-controls">
+            <input type="text" id="searchInput" placeholder="Search notes..." class="search-input">
+            <select id="subjectFilter" class="filter-select">
+                <option value="">All Subjects</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Economics">Economics</option>
+                <option value="Other">Other</option>
+            </select>
+            <select id="roleFilter" class="filter-select">
+                <option value="">All Uploaders</option>
+                <option value="student">Student</option>
+                <option value="faculty">Faculty</option>
+            </select>
+        </div>
+    </div>
+
+    {% if notes %}
+    <div class="notes-grid" id="notesGrid">
+        {% for note in notes %}
+        <div class="note-card" data-subject="{{ note.subject }}" data-title="{{ note.title|lower }}"
+            data-role="{{ note.uploader_role|lower }}">
+            <div class="note-header">
+                <h3>{{ note.title }}</h3>
+                <button class="btn-favorite {% if note._id|string in favorite_note_ids %}favorited{% endif %}"
+                    onclick="toggleFavorite('{{ note._id }}', this)">
+                    ❤️
+                </button>
+            </div>
+            <div class="note-meta">
+                <span class="subject-tag">{{ note.subject }}</span>
+                <span class="uploader">By {{ note.uploader_name }} <span
+                        class="role-badge {{ note.uploader_role|lower }}">({{ note.uploader_role|title }})</span></span>
+            </div>
+            <div class="note-footer">
+                <small>{{ note.uploaded_date_str }}</small>
+                <div class="note-actions">
+                    <a href="/student/preview/{{ note._id }}" class="btn-action" target="_blank">
+                        👁️ Preview
+                    </a>
+                    <a href="/student/download/{{ note._id }}" class="btn-action">
+                        ⬇️ Download
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-data-state">
+        <div class="no-data-icon">📭</div>
+        <h3>No approved notes available</h3>
+        <p>Be the first to share your notes!</p>
+    </div>
+    {% endif %}
+</div>
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function toggleFavorite(noteId, btn) {
+        try {
+            const response = await fetch(`/student/favorite/${noteId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.favorited) {
+                btn.classList.add('favorited');
+            } else {
+                btn.classList.remove('favorited');
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    }
+
+    // Search and filter functionality
+    const searchInput = document.getElementById('searchInput');
+    const subjectFilter = document.getElementById('subjectFilter');
+    const roleFilter = document.getElementById('roleFilter');
+    const notesGrid = document.getElementById('notesGrid');
+
+    function filterNotes() {
+        if (!searchInput || !subjectFilter || !roleFilter || !notesGrid) return;
+
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedSubject = subjectFilter.value;
+        const selectedRole = roleFilter.value;
+        const noteCards = notesGrid.querySelectorAll('.note-card');
+
+        noteCards.forEach(card => {
+            const title = card.getAttribute('data-title') || '';
+            const subject = card.getAttribute('data-subject') || '';
+            const role = card.getAttribute('data-role') || 'student'; // Default to student if missing
+
+            const matchesSearch = title.includes(searchTerm);
+            const matchesSubject = selectedSubject === '' || subject === selectedSubject;
+            const matchesRole = selectedRole === '' || role === selectedRole;
+
+            if (matchesSearch && matchesSubject && matchesRole) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterNotes);
+    if (subjectFilter) subjectFilter.addEventListener('change', filterNotes);
+    if (roleFilter) roleFilter.addEventListener('change', filterNotes);
+</script>
+{% endblock %}

@@ -1,0 +1,802 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Faculty Note Approval Panel{% endblock %}
+{% block page_title %}Faculty Note Approval Panel{% endblock %}
+
+{% block content %}
+<!-- Success/Error Messages -->
+{% set success_msg = request.query_params.get('success') %}
+{% set error_msg = request.query_params.get('error') %}
+
+{% if success_msg %}
+<div class="alert-message success-message"
+    style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 8px; color: #155724;">
+    <strong>✅ Success!</strong> {{ success_msg }}
+</div>
+{% endif %}
+
+{% if error_msg %}
+<div class="alert-message error-message"
+    style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin-bottom: 20px; border-radius: 8px; color: #721c24;">
+    <strong>⚠️ Notice:</strong> {{ error_msg }}
+</div>
+{% endif %}
+
+<div class="approvals-page-container">
+    <!-- Filter Tabs -->
+    <div class="filter-tabs-container"
+        style="margin-bottom: 25px; display: flex; gap: 15px; border-bottom: 2px solid var(--border-color, #eee); padding-bottom: 0;">
+        <button class="filter-tab {% if current_status == 'PENDING' %}active{% endif %}" onclick="switchTab('PENDING')"
+            id="tab-pending"
+            style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 1rem; color: var(--muted); position: relative; transition: all 0.3s ease;">
+            Pending <span class="badge" id="count-pending"
+                style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 5px;">{{
+                pending_count }}</span>
+        </button>
+        <button class="filter-tab {% if current_status == 'APPROVED' %}active{% endif %}"
+            onclick="switchTab('APPROVED')" id="tab-approved"
+            style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 1rem; color: var(--muted); position: relative; transition: all 0.3s ease;">
+            Approved <span class="badge" id="count-approved"
+                style="background: #2ecc71; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 5px;">{{
+                approved_count }}</span>
+        </button>
+        <button class="filter-tab {% if current_status == 'REJECTED' %}active{% endif %}"
+            onclick="switchTab('REJECTED')" id="tab-rejected"
+            style="padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 1rem; color: var(--muted); position: relative; transition: all 0.3s ease;">
+            Rejected <span class="badge" id="count-rejected"
+                style="background: #95a5a6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 5px;">{{
+                rejected_count }}</span>
+        </button>
+    </div>
+
+    <!-- Content Section -->
+    <div class="section-card" id="approvals-card"
+        style="background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 25px;">
+        <div id="loading-overlay" style="display: none; text-align: center; padding: 40px;">
+            <div class="spinner"></div>
+            <p>Loading records...</p>
+        </div>
+
+        <div id="table-content">
+            <h2 id="section-title">
+                {% if current_status == 'PENDING' %}Pending Approvals
+                {% elif current_status == 'APPROVED' %}Approved Notes
+                {% else %}Rejected Notes{% endif %}
+            </h2>
+            <p class="subtitle" id="section-subtitle">
+                {% if current_status == 'PENDING' %}
+                Review student submissions before they become public.
+                {% elif current_status == 'APPROVED' %}
+                View notes that have already been cleared for public access.
+                {% else %}
+                View notes that were rejected due to policy violations or quality issues.
+                {% endif %}
+            </p>
+
+            <div class="table-container" style="overflow-x: auto; margin-top: 20px;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Student</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Title</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Subject</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">AI Check</th>
+                            <th id="date-column-header"
+                                style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">
+                                {% if current_status == 'PENDING' %}Uploaded At
+                                {% elif current_status == 'APPROVED' %}Approved At
+                                {% else %}Rejected At{% endif %}
+                            </th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #eee;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notes-list">
+                        {% if notes %}
+                        {% for note in notes %}
+                        <tr id="note-row-{{ note.id }}" style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px;">{{ note.uploader_name }}</td>
+                            <td style="padding: 12px;"><strong>{{ note.title }}</strong></td>
+                            <td style="padding: 12px;">{{ note.subject }}</td>
+                            <td style="padding: 12px;">
+                                {% if note.ai_status == "Flagged" %}
+                                <div class="status-badge flagged ai-trigger"
+                                    data-results='{{ note.ai_detailed_results|tojson if note.ai_detailed_results else "null" }}'
+                                    data-title="{{ note.title }}" data-ai-type="{{ note.ai_violation_type or '' }}"
+                                    data-ai-severity="{{ note.ai_status or '' }}"
+                                    data-ai-reason="{{ note.ai_flag_reason or '' }}" onclick='handleAIBadgeClick(this)'
+                                    style="color: #e74c3c; font-weight: bold; font-size: 0.82em; display: flex; flex-direction: column; cursor: pointer;">
+                                    <span>🔴 High Risk</span>
+                                    {% if note.ai_violation_type and note.ai_violation_type != 'None' %}
+                                    <span style="font-size: 0.8em; font-weight: normal; opacity: 0.85;">{{ note.ai_violation_type | replace('_',' ') | title }}</span>
+                                    {% endif %}
+                                </div>
+                                {% elif note.ai_status == "Possible Plagiarism" %}
+                                <div class="status-badge ai-trigger"
+                                    data-results='null'
+                                    data-title="{{ note.title }}"
+                                    data-ai-type="Plagiarism"
+                                    data-ai-severity="Possible Plagiarism"
+                                    data-ai-reason="{{ note.ai_flag_reason or '' }}"
+                                    onclick='handleAIBadgeClick(this)'
+                                    style="color: #e67e22; font-weight: bold; font-size: 0.82em; display: flex; flex-direction: column; cursor: pointer;">
+                                    <span>🟠 Plagiarism</span>
+                                    {% if note.plagiarism_score %}
+                                    <span style="font-size: 0.8em; font-weight: normal;">{{ (note.plagiarism_score * 100)|round|int }}% match</span>
+                                    {% endif %}
+                                </div>
+                                {% elif note.ai_status == "Duplicate Title" %}
+                                <div class="status-badge ai-trigger"
+                                    data-results='null'
+                                    data-title="{{ note.title }}"
+                                    data-ai-type="Duplicate"
+                                    data-ai-severity="Duplicate Title"
+                                    data-ai-reason="{{ note.ai_flag_reason or '' }}"
+                                    onclick='handleAIBadgeClick(this)'
+                                    style="color: #f39c12; font-weight: bold; font-size: 0.82em; display: flex; flex-direction: column; cursor: pointer;">
+                                    <span>🟡 Duplicate</span>
+                                    <span style="font-size: 0.8em; font-weight: normal;">Same title exists</span>
+                                </div>
+                                {% elif note.ai_status in ["Scan/Image - Review", "Review Required", "AI Error (Review Required)"] %}
+                                <div class="status-badge review ai-trigger"
+                                    data-results='{{ note.ai_detailed_results|tojson if note.ai_detailed_results else "null" }}'
+                                    data-title="{{ note.title }}" onclick='handleAIBadgeClick(this)'
+                                    style="color: #f39c12; font-weight: bold; font-size: 0.82em; display: flex; flex-direction: column; cursor: pointer;">
+                                    <span>🟡 Medium Risk</span>
+                                    <span style="font-size: 0.8em; font-weight: normal; opacity: 0.9;">(Manual Review)</span>
+                                </div>
+                                {% else %}
+                                <div class="status-badge safe ai-trigger"
+                                    data-results='{{ note.ai_detailed_results|tojson if note.ai_detailed_results else "null" }}'
+                                    data-title="{{ note.title }}" onclick='handleAIBadgeClick(this)'
+                                    style="color: #2ecc71; font-weight: bold; font-size: 0.82em; display: flex; flex-direction: column; cursor: pointer;">
+                                    <span>🟢 Safe</span>
+                                    <span style="font-size: 0.8em; font-weight: normal; opacity: 0.9;">(Passed)</span>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; font-size: 0.9em; color: var(--muted);">
+                                {% if current_status == 'PENDING' %}
+                                {{ note.uploaded_at or 'N/A' }}
+                                {% else %}
+                                {{ note.approved_at or note.rejected_at or 'N/A' }}
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px;">
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="/faculty/preview/{{ note.id }}" class="btn-sm"
+                                        style="color: #3498db; text-decoration: none; font-weight: 500;">Preview</a>
+                                    {% if current_status == 'PENDING' %}
+                                    <button onclick="approveNote('{{ note.id }}')"
+                                        style="background: #2ecc71; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Approve</button>
+                                    <button onclick="openRejectModal('{{ note.id }}', '{{ note.title }}')"
+                                        style="background: #e74c3c; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Reject</button>
+                                    <button type="button" class="report-btn" data-note-id="{{ note.id }}"
+                                        data-ai-type="{{ note.ai_violation_type }}"
+                                        data-ai-severity="{{ note.ai_status }}"
+                                        data-ai-reason="{{ note.ai_flag_reason }}" onclick="openReportModal(this)"
+                                        style="background: #e67e22; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                                        ⚠️ Report
+                                    </button>
+                                    {% elif current_status == 'REJECTED' %}
+                                    <button onclick="approveNote('{{ note.id }}')"
+                                        style="background: #2ecc71; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;"
+                                        title="Approve after correction">Approve</button>
+                                    <button type="button" class="report-btn" data-note-id="{{ note.id }}"
+                                        data-ai-type="{{ note.ai_violation_type }}"
+                                        data-ai-severity="{{ note.ai_status }}"
+                                        data-ai-reason="{{ note.ai_flag_reason }}" onclick="openReportModal(this)"
+                                        style="background: #e67e22; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                                        ⚠️ Report
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="padding: 40px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 10px;">✨</div>
+                                <h3 id="empty-state-title">
+                                    {% if current_status == 'PENDING' %}All caught up!
+                                    {% elif current_status == 'APPROVED' %}No approved notes yet.
+                                    {% else %}No rejected notes.
+                                    {% endif %}
+                                </h3>
+                                <p id="empty-state-text">
+                                    {% if current_status == 'PENDING' %}No student notes are pending your approval.
+                                    {% elif current_status == 'APPROVED' %}Notes approved by you will appear here.
+                                    {% else %}Notes rejected by you will appear here.
+                                    {% endif %}
+                                </p>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast"
+    style="visibility: hidden; min-width: 250px; margin-left: -125px; background-color: var(--text); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1001; left: 50%; bottom: 30px; font-size: 17px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <span id="toast-message"></span>
+</div>
+
+<!-- Report Modal -->
+<div id="reportModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeReportModal()">&times;</span>
+        <h2>🚨 Report to Admin</h2>
+        <p style="margin-bottom: 15px; color: var(--muted);">Only report serious issues. For minor issues, use
+            <strong>Reject</strong>.
+        </p>
+        <div id="aiWarningContainer"></div>
+
+        <!-- Decision Guidance -->
+        <div
+            style="background: var(--card); border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem;">
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #475569;">📋 Decision Guidance:</p>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li><strong>Risk > 80%:</strong> Recommended to <strong>Reject</strong> or <strong>Report</strong>.</li>
+                <li><strong>Risk 50-80%:</strong> Requires careful <strong>Manual Review</strong>.</li>
+                <li><strong>Safe:</strong> Usually safe to <strong>Approve</strong>.</li>
+            </ul>
+        </div>
+
+        <form id="reportForm" onsubmit="submitReport(event)">
+            <input type="hidden" id="reportItemId" name="item_id">
+            <input type="hidden" id="reportItemType" name="item_type" value="note">
+            <div class="form-group">
+                <label>Serious Violation Category*</label>
+                <select id="violationSelect" name="reason" required
+                    style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="PLAGIARISM">Plagiarism Detected</option>
+                    <option value="ACADEMIC_MISCONDUCT">Academic Misconduct</option>
+                    <option value="COPYRIGHT_VIOLATION">Copyright Violation</option>
+                    <option value="SPAM_LOW_QUALITY">Spam / Low Quality</option>
+                    <option value="INAPPROPRIATE_CONTENT">Inappropriate Content</option>
+                    <option value="MALICIOUS_CONTENT">Malicious Content</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Evidence & Details*</label>
+                <textarea name="description" rows="4" required
+                    placeholder="Please provide details about the violation..."
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+            </div>
+
+            <p style="font-size: 0.75rem; color: #94a3b8; margin: 15px 0; text-align: center;">
+                ⚠ AI is advisory. Final decision is faculty responsibility.
+            </p>
+
+            <button type="submit" class="btn-primary" style="margin-top: 5px; background: #d35400; width: 100%;">Submit
+                Report</button>
+        </form>
+    </div>
+</div>
+
+<!-- AI Analysis Modal -->
+<div id="aiAnalysisModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close-modal" onclick="closeAIAnalysisModal()">&times;</span>
+        <h2 id="aiModalTitle">🤖 AI Safety Breakdown</h2>
+        <p id="aiModalNoteTitle" style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;"></p>
+
+        <div id="aiModalContent">
+            <!-- Populated by JS -->
+        </div>
+
+        <div
+            style="background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 8px; margin-top: 20px;">
+            <p style="margin: 0; font-size: 0.8rem; color: #92400e;">
+                ⚠ <strong>Disclaimer:</strong> AI analysis is advisory and based on pattern matching.
+                Final academic and policy decisions are the responsibility of the faculty member.
+            </p>
+        </div>
+
+        <div style="margin-top: 25px; display: flex; gap: 10px;">
+            <button onclick="closeAIAnalysisModal()" class="btn-primary" style="background: #94a3b8; flex: 1;">Close
+                Analysis</button>
+            <button id="aiModalReportBtn" class="btn-primary" style="background: #e67e22; flex: 1;">Report to
+                Admin</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeRejectModal()">&times;</span>
+        <h2>🚫 Reject Note</h2>
+        <p style="margin-bottom: 20px; color: var(--muted);">You are rejecting: <strong id="rejectNoteTitle"></strong></p>
+        <form id="rejectForm" onsubmit="submitRejection(event)">
+            <input type="hidden" id="rejectNoteId">
+            <div class="form-group">
+                <label>Reason for Rejection*</label>
+                <textarea id="rejectionReason" name="reason" rows="4" required
+                    placeholder="Explain why this note is being rejected..."
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="background: #e74c3c; flex: 1;">Confirm
+                    Rejection</button>
+                <button type="button" class="btn-primary" onclick="closeRejectModal()"
+                    style="background: #95a5a6; flex: 1;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .filter-tab.active {
+        color: var(--primary-color, #11998e) !important;
+        border-bottom: 3px solid var(--primary-color, #11998e) !important;
+        background: rgba(17, 153, 142, 0.05) !important;
+    }
+
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--primary-color, #11998e);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--muted);
+    }
+
+    .modal-content {
+        background: var(--card);
+        margin: 10% auto;
+        padding: 25px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .close-modal {
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+    }
+</style>
+
+<script>
+    let currentStatus = '{{ current_status }}';
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-message');
+        toastMsg.textContent = message;
+        toast.style.backgroundColor = type === 'success' ? '#2ecc71' : '#e74c3c';
+        toast.style.visibility = 'visible';
+        setTimeout(() => {
+            toast.style.visibility = 'hidden';
+        }, 3000);
+    }
+
+    async function switchTab(status) {
+        // Navigate to the correct URL — server will render the right tab data
+        // This avoids AJAX fetch errors and keeps reload working correctly
+        window.location.href = `/faculty/approvals?status=${status.toLowerCase()}`;
+    }
+
+
+    async function loadNotes(status) {
+        const tableBody = document.getElementById('notes-list');
+        const loading = document.getElementById('loading-overlay');
+        const tableContent = document.getElementById('table-content');
+
+        loading.style.display = 'block';
+        tableContent.style.opacity = '0.5';
+
+        try {
+            const response = await fetch(`/faculty/api/notes?status=${status.toLowerCase()}`);
+            const data = await response.json();
+
+            // Update counts
+            document.getElementById('count-pending').textContent = data.pending_count;
+            document.getElementById('count-approved').textContent = data.approved_count;
+            document.getElementById('count-rejected').textContent = data.rejected_count;
+
+            if (data.notes.length === 0) {
+                const title = status === 'PENDING' ? 'All caught up!' :
+                    (status === 'APPROVED' ? 'No approved notes yet.' : 'No rejected notes.');
+                const subtitle = status === 'PENDING' ? 'No student notes are pending your approval.' :
+                    (status === 'APPROVED' ? 'Notes approved by you will appear here.' :
+                        'Notes rejected by you will appear here.');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="padding: 40px; text-align: center;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">✨</div>
+                            <h3>${title}</h3>
+                            <p>${subtitle}</p>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tableBody.innerHTML = data.notes.map(note => `
+                    <tr id="note-row-${note.id}" style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 12px;">${note.uploader_name}</td>
+                        <td style="padding: 12px;"><strong>${note.title}</strong></td>
+                        <td style="padding: 12px;">${note.subject}</td>
+                        <td style="padding: 12px;">
+                            <div class="status-badge ai-trigger" style="cursor: pointer; display: flex; flex-direction: column; font-size: 0.82em; font-weight: bold;" 
+                                 data-results='${JSON.stringify(note.ai_detailed_results)}'
+                                 data-title="${note.title.replace(/"/g, '&quot;')}"
+                                 data-ai-type="${note.ai_violation_type || ''}"
+                                 data-ai-severity="${note.ai_status || ''}"
+                                 data-ai-reason="${(note.ai_flag_reason || '').replace(/"/g, '&quot;')}"
+                                 onclick='handleAIBadgeClick(this)'>
+                                ${note.ai_status === 'Flagged' ? `
+                                    <span style="color:#e74c3c;">🔴 High Risk</span>
+                                    <span style="font-size:0.8em;font-weight:normal;color:#e74c3c;opacity:0.85;">${note.ai_violation_type || ''}</span>
+                                ` : note.ai_status === 'Possible Plagiarism' ? `
+                                    <span style="color:#e67e22;">🟠 Plagiarism</span>
+                                    <span style="font-size:0.8em;font-weight:normal;color:#e67e22;">${note.plagiarism_score ? Math.round(note.plagiarism_score*100)+'% match' : ''}</span>
+                                ` : note.ai_status === 'Duplicate Title' ? `
+                                    <span style="color:#f39c12;">🟡 Duplicate</span>
+                                    <span style="font-size:0.8em;font-weight:normal;color:#f39c12;">Same title exists</span>
+                                ` : ['Scan/Image - Review', 'Review Required', 'AI Error (Review Required)'].includes(note.ai_status) ? `
+                                    <span style="color:#f39c12;">🟡 Medium Risk</span>
+                                    <span style="font-size:0.8em;font-weight:normal;color:#f39c12;">(Manual Review)</span>
+                                ` : `
+                                    <span style="color:#2ecc71;">🟢 Safe</span>
+                                    <span style="font-size:0.8em;font-weight:normal;color:#2ecc71;">(Passed)</span>
+                                `}
+                            </div>
+                        </td>
+                        <td style="padding: 12px; font-size: 0.9em; color: var(--muted);">
+                            ${status === 'PENDING' ? (note.uploaded_at || 'N/A') :
+                        (status === 'APPROVED' ? (note.approved_at || 'N/A') : (note.rejected_at || 'N/A'))}
+                        </td>
+                        <td style="padding: 12px;">
+                            <div style="display: flex; gap: 8px;">
+                                <a href="/faculty/preview/${note.id}" class="btn-sm" style="color: #3498db; text-decoration: none; font-weight: 500;">Preview</a>
+                                ${status === 'PENDING' ? `
+                                    <button onclick="approveNote('${note.id}')" style="background: #2ecc71; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Approve</button>
+                                    <button onclick="openRejectModal('${note.id}', '${note.title}')" style="background: #e74c3c; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Reject</button>
+                                    <button type="button" class="report-btn" data-note-id="${note.id}"
+                                        data-ai-type="${note.ai_violation_type || ''}" data-ai-severity="${note.ai_status || ''}"
+                                        data-ai-reason="${note.ai_flag_reason || ''}" onclick="openReportModal(this)"
+                                        style="background: #e67e22; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                                        ⚠️ Report
+                                    </button>
+                                ` : (status === 'REJECTED' ? `
+                                    <button onclick="approveNote('${note.id}')" style="background: #2ecc71; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Approve</button>
+                                    <button type="button" class="report-btn" data-note-id="${note.id}"
+                                        data-ai-type="${note.ai_violation_type || ''}" data-ai-severity="${note.ai_status || ''}"
+                                        data-ai-reason="${note.ai_flag_reason || ''}" onclick="openReportModal(this)"
+                                        style="background: #e67e22; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                                        ⚠️ Report
+                                    </button>
+                                ` : '')}
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error fetching notes:', error);
+            showToast('Failed to load notes.', 'error');
+        } finally {
+            loading.style.display = 'none';
+            tableContent.style.opacity = '1';
+        }
+    }
+
+    async function approveNote(noteId) {
+        if (!confirm('Are you sure you want to approve this note?')) return;
+
+        try {
+            const response = await fetch(`/faculty/approve/${noteId}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Note approved successfully', 'success');
+                // Remove row from UI
+                const row = document.getElementById(`note-row-${noteId}`);
+                if (row) {
+                    row.style.transition = 'all 0.5s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(() => {
+                        row.remove();
+                        // Update counts
+                        const pendingBadge = document.getElementById('count-pending');
+                        const approvedBadge = document.getElementById('count-approved');
+                        const rejectedBadge = document.getElementById('count-rejected');
+
+                        if (currentStatus === 'PENDING') {
+                            pendingBadge.textContent = parseInt(pendingBadge.textContent) - 1;
+                        } else if (currentStatus === 'REJECTED') {
+                            rejectedBadge.textContent = parseInt(rejectedBadge.textContent) - 1;
+                        }
+                        approvedBadge.textContent = parseInt(approvedBadge.textContent) + 1;
+
+                        // Check if list is empty
+                        if (document.querySelectorAll('#notes-list tr').length === 0) {
+                            loadNotes('PENDING'); // Reload to show empty state
+                        }
+                    }, 500);
+                }
+            } else {
+                showToast(data.error || 'Failed to approve note', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred.', 'error');
+        }
+    }
+
+    // Modal Logic
+    const rejectModal = document.getElementById('rejectModal');
+    const reportModal = document.getElementById('reportModal');
+
+    function openRejectModal(noteId, title) {
+        document.getElementById('rejectNoteId').value = noteId;
+        document.getElementById('rejectNoteTitle').textContent = title;
+        document.getElementById('rejectionReason').value = '';
+        rejectModal.style.display = 'block';
+    }
+
+    function closeRejectModal() {
+        rejectModal.style.display = 'none';
+    }
+
+    async function submitRejection(event) {
+        event.preventDefault();
+        const noteId = document.getElementById('rejectNoteId').value;
+        const reason = document.getElementById('rejectionReason').value;
+
+        const formData = new FormData();
+        formData.append('reason', reason);
+
+        try {
+            const response = await fetch(`/faculty/reject/${noteId}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Note rejected successfully', 'success');
+                closeRejectModal();
+                const row = document.getElementById(`note-row-${noteId}`);
+                if (row) {
+                    row.style.transition = 'all 0.5s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        row.remove();
+                        const pendingBadge = document.getElementById('count-pending');
+                        const rejectedBadge = document.getElementById('count-rejected');
+                        pendingBadge.textContent = parseInt(pendingBadge.textContent) - 1;
+                        rejectedBadge.textContent = parseInt(rejectedBadge.textContent) + 1;
+                        if (document.querySelectorAll('#notes-list tr').length === 0) {
+                            loadNotes('PENDING');
+                        }
+                    }, 500);
+                }
+            } else {
+                showToast(data.error || 'Failed to reject note', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('An error occurred.', 'error');
+        }
+    }
+
+    function handleAIBadgeClick(element) {
+        const results = JSON.parse(element.getAttribute('data-results'));
+        const title = element.getAttribute('data-title');
+        const type = element.getAttribute('data-ai-type');
+        const reason = element.getAttribute('data-ai-reason');
+        const severity = element.getAttribute('data-ai-severity');
+        const noteId = element.closest('tr').id.replace('note-row-', '');
+
+        openAIAnalysisModal(results, title, type, reason, severity, noteId);
+    }
+
+    function openAIAnalysisModal(results, noteTitle, aiType, aiReason, aiSeverity, noteId) {
+        const modal = document.getElementById('aiAnalysisModal');
+        const content = document.getElementById('aiModalContent');
+        document.getElementById('aiModalNoteTitle').innerHTML = `Document: <strong>${noteTitle}</strong>`;
+
+        if (!results) {
+            if (aiSeverity === 'Flagged') {
+                content.innerHTML = `
+                <div style="background: #fff1f1; border: 1px solid #fca5a5; padding: 15px; border-radius: 10px;">
+                    <h3 style="color: #991b1b; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                        🔴 High Risk Detected
+                    </h3>
+                    <p style="color: #b91c1c; font-weight: 600; font-size: 0.95rem; margin-bottom: 5px;">Violation: ${aiType || 'Policy Violation'}</p>
+                    <p style="color: #64748b; font-size: 0.85rem; line-height: 1.5; font-style: italic;">
+                        "${aiReason || 'Potential violation flagged by AI core'}"
+                    </p>
+                </div>`;
+            } else {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 30px 10px;">
+                        <span style="font-size: 3.5rem;">🔍</span>
+                        <p style="margin-top: 15px; color: #64748b;">No detailed AI safety scores recorded for this file.<br>
+                        <small>(Only notes uploaded after AI integration have breakdown data)</small></p>
+                    </div>`;
+            }
+        } else {
+            // New flat scores format from Groq: { plagiarism: 5, copyright_violation: 2, ... }
+            const scores = results;
+            let gridHtml = `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">`;
+
+            for (const [cat, score] of Object.entries(scores)) {
+                // LLM returns 0-10, scale to 0-100 for percentage UI
+                const pct = typeof score === 'number' ? score * 10 : 0;
+                const detected = pct > 70;
+                gridHtml += `
+                    <div style="padding: 10px; border: 1px solid ${detected ? '#fca5a5' : '#e2e8f0'}; border-radius: 8px; background: ${detected ? '#fff1f1' : 'white'};">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <strong style="font-size: 0.8rem; color: #334155;">${cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</strong>
+                            <span style="font-size: 0.75rem; font-weight: 700; color: ${pct > 70 ? '#dc2626' : (pct > 30 ? '#d97706' : '#059669')}">${Math.round(pct)}%</span>
+                        </div>
+                        <div style="background: #e2e8f0; border-radius: 4px; height: 5px; margin-top: 5px;">
+                            <div style="background: ${pct > 70 ? '#dc2626' : (pct > 30 ? '#d97706' : '#059669')}; width: ${Math.min(pct, 100)}%; height: 100%; border-radius: 4px;"></div>
+                        </div>
+                    </div>`;
+            }
+            gridHtml += `</div>`;
+            content.innerHTML = gridHtml;
+        }
+
+        // Setup the report button to pass correct context
+        const reportBtn = document.getElementById('aiModalReportBtn');
+        reportBtn.onclick = () => {
+            closeAIAnalysisModal();
+
+            // Create a synthetic context object for openReportModal
+            const syntheticBtn = {
+                getAttribute: function (attr) {
+                    if (attr === 'data-note-id') return noteId;
+                    if (attr === 'data-ai-type') return aiType;
+                    if (attr === 'data-ai-reason') return aiReason;
+                    if (attr === 'data-ai-severity') return aiSeverity;
+                    return '';
+                }
+            };
+            openReportModal(syntheticBtn);
+        };
+
+        modal.style.display = 'block';
+    }
+
+    function closeAIAnalysisModal() {
+        document.getElementById('aiAnalysisModal').style.display = 'none';
+    }
+
+    function openReportModal(button) {
+        const itemId = button.getAttribute("data-note-id");
+        const aiType = button.getAttribute("data-ai-type");
+        const aiReason = button.getAttribute("data-ai-reason");
+        const aiSeverity = button.getAttribute("data-ai-severity");
+
+        document.getElementById('reportItemId').value = itemId;
+
+        const dropdown = document.getElementById("violationSelect");
+        if (aiType) {
+            let matched = false;
+            const searchTerm = aiType.toUpperCase().replace(/_/g, '');
+            for (let i = 0; i < dropdown.options.length; i++) {
+                const optionVal = dropdown.options[i].value.toUpperCase().replace(/_/g, '');
+                if (searchTerm.includes(optionVal) || optionVal.includes(searchTerm)) {
+                    dropdown.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) dropdown.selectedIndex = 0;
+        }
+
+        const warningContainer = document.getElementById("aiWarningContainer");
+        if (aiType) {
+            warningContainer.innerHTML = `
+                <div style="background: #fff3cd; border-left: 4px solid #e74c3c; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <strong style="color: #c0392b;">🤖 AI Analysis: ${aiType.replace(/_/g, ' ')}</strong>
+                    </div>
+                    <p style="margin: 0; color: #856404; font-size: 0.85rem; font-style: italic;">
+                        "${aiReason || 'Potential policy violation detected.'}"
+                    </p>
+                </div>
+            `;
+            document.querySelector("#reportForm textarea[name='description']").value = `AI Detection Reference: ${aiReason}`;
+        } else {
+            warningContainer.innerHTML = "";
+            document.querySelector("#reportForm textarea[name='description']").value = "";
+        }
+
+        reportModal.style.display = "block";
+    }
+
+    function closeReportModal() {
+        reportModal.style.display = "none";
+    }
+
+    async function submitReport(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/report/create', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Report submitted successfully.', 'success');
+                closeReportModal();
+                form.reset();
+            } else {
+                showToast('Error: ' + (result.error || 'Unknown error'), 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Failed to submit report.', 'error');
+        }
+    }
+
+    // Close modals on outside click
+    window.onclick = function (event) {
+        if (event.target == rejectModal) closeRejectModal();
+        if (event.target == reportModal) closeReportModal();
+        if (event.target == document.getElementById('aiAnalysisModal')) closeAIAnalysisModal();
+    }
+</script>
+{% endblock %}

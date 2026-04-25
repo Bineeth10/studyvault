@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - StudyVault</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: var(--text);
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .role-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--muted);
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎓 Create Account</h1>
+        <p class="subtitle">
+            <span class="role-badge">{{ role.upper() }}</span>
+        </p>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <div id="js-error" class="error" style="display: none;"></div>
+
+        <style>
+            .password-wrapper {
+                position: relative;
+            }
+
+            .toggle-password {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+                color: var(--muted);
+                font-size: 1.2em;
+                user-select: none;
+            }
+        </style>
+
+        {% if registrations_enabled %}
+        <form action="/register" method="POST">
+            <input type="hidden" name="role" value="{{ role }}">
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required minlength="6">
+                    <span class="toggle-password" id="eyeIcon">👁️</span>
+                </div>
+            </div>
+
+            {% if role == 'faculty' %}
+            <style>
+                .subject-group-container {
+                    display: flex;
+                    gap: 20px;
+                    background: var(--card);
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 1px solid #e0e0e0;
+                    margin-top: 5px;
+                }
+
+                .subject-column {
+                    display: flex;
+                    flex-direction: column;
+                    flex: 1;
+                }
+
+                .subject-column label {
+                    display: flex;
+                    align-items: center;
+                    cursor: pointer;
+                    font-weight: normal;
+                    font-size: 0.95em;
+                    margin-bottom: 10px;
+                }
+
+                .subject-column label:last-child {
+                    margin-bottom: 0;
+                }
+
+                .subject-column input[type="checkbox"] {
+                    width: auto;
+                    margin-right: 10px;
+                }
+
+                /* Mobile responsiveness */
+                @media (max-width: 600px) {
+                    .subject-group-container {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
+                }
+            </style>
+
+            <div class="form-group">
+                <label>Subjects You Handle (Select at least one) <span style="color: red;">*</span></label>
+                <div class="subject-group-container">
+                    {% if available_subjects %}
+                    {% set count = available_subjects|length %}
+                    {% set midpoint = (count / 2)|round(0, 'ceil')|int %}
+
+                    <div class="subject-column">
+                        {% for subject in available_subjects[:midpoint] %}
+                        <label><input type="checkbox" name="subjects" value="{{ subject.name }}"> {{ subject.name
+                            }}</label>
+                        {% endfor %}
+                    </div>
+                    <div class="subject-column">
+                        {% for subject in available_subjects[midpoint:] %}
+                        <label><input type="checkbox" name="subjects" value="{{ subject.name }}"> {{ subject.name
+                            }}</label>
+                        {% endfor %}
+                        <label><input type="checkbox" name="subjects" value="Other" id="subjectOther"
+                                onchange="toggleCustomSubject()"> Other</label>
+                    </div>
+                    {% else %}
+                    <!-- Fallback if no subjects loaded -->
+                    <div class="subject-column">
+                        <label><input type="checkbox" name="subjects" value="Mathematics"> Mathematics</label>
+                        <label><input type="checkbox" name="subjects" value="Physics"> Physics</label>
+                        <label><input type="checkbox" name="subjects" value="Chemistry"> Chemistry</label>
+                        <label><input type="checkbox" name="subjects" value="Biology"> Biology</label>
+                    </div>
+                    <div class="subject-column">
+                        <label><input type="checkbox" name="subjects" value="Computer Science"> Computer Science</label>
+                        <label><input type="checkbox" name="subjects" value="English"> English</label>
+                        <label><input type="checkbox" name="subjects" value="History"> History</label>
+                        <label><input type="checkbox" name="subjects" value="Economics"> Economics</label>
+                        <label><input type="checkbox" name="subjects" value="Other" id="subjectOther"
+                                onchange="toggleCustomSubject()"> Other</label>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Custom Subject Input -->
+                <div id="customSubjectGroup" style="display: none; margin-top: 10px;">
+                    <label for="custom_subject"
+                        style="font-weight: normal; font-size: 0.9em; margin-bottom: 5px; display: block;">Please
+                        specify subject:</label>
+                    <input type="text" id="custom_subject" name="custom_subject"
+                        placeholder="e.g. Artificial Intelligence">
+                </div>
+            </div>
+
+            <script>
+                function toggleCustomSubject() {
+                    const otherCheckbox = document.getElementById('subjectOther');
+                    const customSubjectGroup = document.getElementById('customSubjectGroup');
+
+                    if (otherCheckbox.checked) {
+                        customSubjectGroup.style.display = 'block';
+                        document.getElementById('custom_subject').required = true;
+                    } else {
+                        customSubjectGroup.style.display = 'none';
+                        document.getElementById('custom_subject').required = false;
+                        document.getElementById('custom_subject').value = '';
+                    }
+                }
+            </script>
+
+            <div class="form-group">
+                <label for="years_of_experience">Years of Experience (Optional)</label>
+                <input type="number" id="years_of_experience" name="years_of_experience" min="0" placeholder="e.g. 5">
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn-submit">Register</button>
+        </form>
+        {% else %}
+        <div class="error" style="background: #fff3cd; color: #856404; border-color: #ffeeba; text-align: center;">
+            <h3 style="color: #856404;">🚫 Registrations Closed</h3>
+            <p style="margin-top: 10px;">New user registrations are currently disabled by the administrator.</p>
+        </div>
+        {% endif %}
+
+        <script>
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const eyeClosed = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+            // Set initial icon
+            eyeIcon.innerHTML = eyeOpen;
+
+            eyeIcon.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                eyeIcon.innerHTML = type === 'password' ? eyeOpen : eyeClosed;
+            });
+
+            // Form validation for Faculty subjects
+            const registerForm = document.querySelector('form');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function (e) {
+                    const subjectCheckboxes = document.querySelectorAll('input[name="subjects"]');
+                    const errorDiv = document.getElementById('js-error');
+
+                    // Reset error
+                    if (errorDiv) errorDiv.style.display = 'none';
+
+                    // Only validate if subjects field exists (Faculty role)
+                    if (subjectCheckboxes.length > 0) {
+                        let isChecked = Array.from(subjectCheckboxes).some(cb => cb.checked);
+
+                        if (!isChecked) {
+                            e.preventDefault();
+                            if (errorDiv) {
+                                errorDiv.innerText = 'Please select at least one subject.';
+                                errorDiv.style.display = 'block';
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            } else {
+                                alert('Please select at least one subject.');
+                            }
+                        }
+                    }
+                });
+            }
+        </script>
+
+        <div class="login-link">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </div>
+</body>
+
+</html>

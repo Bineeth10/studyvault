@@ -1,0 +1,48 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Edit Note - Faculty{% endblock %}
+{% block page_title %}Edit Material{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    <div class="section-card">
+        <h2>Edit Note: {{ note.title }}</h2>
+        <form action="/faculty/edit-note/{{ note._id }}" method="POST">
+            <div class="form-group">
+                <label for="title">Material Title</label>
+                <input type="text" id="title" name="title" class="form-control" value="{{ note.title }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject" class="form-control" required>
+                    <option value="Computer Science" {% if note.subject=='Computer Science' %}selected{% endif %}>
+                        Computer Science</option>
+                    <option value="Mathematics" {% if note.subject=='Mathematics' %}selected{% endif %}>Mathematics
+                    </option>
+                    <option value="Physics" {% if note.subject=='Physics' %}selected{% endif %}>Physics</option>
+                    <option value="Literature" {% if note.subject=='Literature' %}selected{% endif %}>Literature
+                    </option>
+                    <option value="Business" {% if note.subject=='Business' %}selected{% endif %}>Business</option>
+                    <option value="Engineering" {% if note.subject=='Engineering' %}selected{% endif %}>Engineering
+                    </option>
+                    <option value="Medicine" {% if note.subject=='Medicine' %}selected{% endif %}>Medicine</option>
+                    <option value="Other" {% if note.subject=='Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="4"
+                    required>{{ note.description }}</textarea>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button type="submit" class="btn-primary">Update Material</button>
+                <a href="/faculty/manage-notes" class="btn-secondary"
+                    style="background: #94a3b8; text-decoration: none; padding: 12px 25px; border-radius: 8px; color: white;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

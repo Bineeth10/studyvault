@@ -1,0 +1,576 @@
+{% extends "admin/base.html" %}
+
+{% block title %}System Settings{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="settings-container" style="animation: fadeIn 0.5s ease;">
+
+    <!-- Notifications -->
+    {% if request.query_params.get('error') %}
+    <div
+        style="background: #fef2f2; color: #dc2626; padding: 16px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #fee2e2; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.2rem;">❌</span>
+        <div><strong>Action Blocked:</strong> {{ request.query_params.get('error') }}</div>
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('success') %}
+    <div
+        style="background: #f0fdf4; color: #16a34a; padding: 16px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #dcfce7; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.2rem;">✅</span>
+        <div><strong>Success:</strong> {{ request.query_params.get('success') }}</div>
+    </div>
+    {% endif %}
+
+    <!-- 1. General Configuration (Always Visible) -->
+    <div class="section-card" style="border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div class="section-header"
+            style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; margin-bottom: 25px;">
+            <div>
+                <h2 style="margin: 0; color: #1e293b; font-size: 1.4rem;">⚙️ General Configuration</h2>
+                <p class="subtitle" style="margin: 5px 0 0; color: #64748b; font-size: 0.9rem;">Routine platform
+                    parameters and user access limits</p>
+            </div>
+            <span class="badge"
+                style="background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Operational</span>
+        </div>
+
+        <form method="post" action="/admin/settings/update" class="settings-form">
+            <div class="setting-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+
+                <!-- Registrations -->
+                <div class="setting-card-mini"
+                    style="background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div class="setting-info">
+                            <h3 style="margin: 0; font-size: 1.05rem; color: #334155;">User Registrations</h3>
+                            <p style="margin: 4px 0 0; font-size: 0.85rem; color: #64748b;">Allow new account creation
+                            </p>
+                        </div>
+                        <div class="setting-control" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="reg-toggle" name="registrations_enabled" {% if
+                                settings.registrations_enabled %}checked{% endif %} style="display: none;"
+                                onchange="updateToggleLabel('reg-toggle', 'reg-status')">
+                            <label for="reg-toggle" class="switch">
+                                <span class="slider"></span>
+                            </label>
+                            <span id="reg-status" {% if settings.registrations_enabled %}
+                                style="font-size: 0.8rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #dcfce7; color: #16a34a;"
+                                {% else %}
+                                style="font-size: 0.8rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #fee2e2; color: #dc2626;"
+                                {% endif %}>{%
+                                if settings.registrations_enabled %}Enabled{% else %}Disabled{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Tools -->
+                <div class="setting-card-mini"
+                    style="background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div class="setting-info">
+                            <h3 style="margin: 0; font-size: 1.05rem; color: #334155;">AI Assistant</h3>
+                            <p style="margin: 4px 0 0; font-size: 0.85rem; color: #64748b;">Enable student helper tools
+                            </p>
+                        </div>
+                        <div class="setting-control" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="ai-toggle" name="ai_enabled" {% if settings.ai_enabled
+                                %}checked{% endif %} style="display: none;"
+                                onchange="updateToggleLabel('ai-toggle', 'ai-status')">
+                            <label for="ai-toggle" class="switch">
+                                <span class="slider"></span>
+                            </label>
+                            <span id="ai-status" {% if settings.ai_enabled %}
+                                style="font-size: 0.8rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #dcfce7; color: #16a34a;"
+                                {% else %}
+                                style="font-size: 0.8rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #fee2e2; color: #dc2626;"
+                                {% endif %}>{%
+                                if settings.ai_enabled %}Enabled{% else %}Disabled{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Max Upload Size -->
+                <div class="setting-card-mini"
+                    style="background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">
+                    <div class="setting-info" style="margin-bottom: 12px;">
+                        <h3 style="margin: 0; font-size: 1.05rem; color: #334155;">Max Upload Size</h3>
+                        <p style="margin: 4px 0 0; font-size: 0.85rem; color: #64748b;">Upper limit per file (MB)</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="number" name="max_upload_size" class="form-control"
+                            value="{{ settings.max_upload_size }}" min="1" max="100" required
+                            style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px;">
+                        <span style="font-weight: 700; color: #64748b; font-size: 0.9rem;">MB</span>
+                    </div>
+                </div>
+
+                <!-- Allowed File Types (Checkbox UI) -->
+                <div class="setting-card-mini"
+                    style="background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9; grid-column: 1 / -1;">
+                    <div class="setting-info" style="margin-bottom: 14px;">
+                        <h3 style="margin: 0; font-size: 1.05rem; color: #334155;">
+                            📎 Allowed File Types
+                        </h3>
+                        <p style="margin: 4px 0 0; font-size: 0.85rem; color: #64748b;">
+                            Select the file formats users may upload. Only checked types will be accepted by the server.
+                        </p>
+                    </div>
+
+                    <!-- Hidden field sent to server -->
+                    <input type="hidden" name="allowed_file_types" id="allowed_file_types_hidden"
+                        value="{{ settings.allowed_file_types }}">
+
+                    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                        <!-- Documents Group -->
+                        <div class="filetype-group">
+                            <div class="filetype-group-label">
+                                <i class="fas fa-file-alt" style="color: #3b82f6;"></i> Documents
+                            </div>
+                            <div class="filetype-checkboxes">
+                                {% for ext in ['pdf', 'doc', 'docx', 'ppt', 'pptx'] %}
+                                <label
+                                    class="filetype-chip {% if ext in (settings.allowed_file_types or '').split(',') %}active{% endif %}"
+                                    id="chip-{{ ext }}">
+                                    <input type="checkbox" value="{{ ext }}" {% if ext in (settings.allowed_file_types
+                                        or '' ).split(',') %}checked{% endif %} onchange="syncFileTypes()"
+                                        style="position:absolute;opacity:0;pointer-events:none;">
+                                    <span class="chip-icon">
+                                        {% if ext == 'pdf' %}📄{% elif ext in ['doc','docx'] %}📝{% else %}📊{% endif %}
+                                    </span>
+                                    <span class="chip-label">{{ ext | upper }}</span>
+                                    <span class="chip-check">✓</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Diagrams / Images Group -->
+                        <div class="filetype-group">
+                            <div class="filetype-group-label">
+                                <i class="fas fa-image" style="color: #10b981;"></i> Diagrams &amp; Images
+                            </div>
+                            <div class="filetype-checkboxes">
+                                {% for ext in ['jpg', 'jpeg', 'png'] %}
+                                <label
+                                    class="filetype-chip {% if ext in (settings.allowed_file_types or '').split(',') %}active{% endif %}"
+                                    id="chip-{{ ext }}">
+                                    <input type="checkbox" value="{{ ext }}" {% if ext in (settings.allowed_file_types
+                                        or '' ).split(',') %}checked{% endif %} onchange="syncFileTypes()"
+                                        style="position:absolute;opacity:0;pointer-events:none;">
+                                    <span class="chip-icon">🖼️</span>
+                                    <span class="chip-label">{{ ext | upper }}</span>
+                                    <span class="chip-check">✓</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview of stored value -->
+                    <div
+                        style="margin-top: 14px; font-size: 0.82rem; color: #64748b; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: 600; color: #475569;">Active extensions:</span>
+                        <code id="active_ext_preview"
+                            style="background: #e2e8f0; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; color: #334155;">
+                            {{ settings.allowed_file_types or 'none' }}
+                        </code>
+                        <span style="color: #94a3b8; font-size: 0.78rem;">
+                            🔒 exe, zip, js, html, php, svg, gif — always blocked
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions"
+                style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 12px;">
+                <span style="font-size: 0.85rem; color: #64748b;">
+                    🕒 Last Updated: <strong>{{ settings.updated_at.strftime('%Y-%m-%d %H:%M') if settings.updated_at
+                        else 'Never' }}</strong>
+                </span>
+                <button type="submit" class="btn-primary" style="padding: 10px 24px; font-weight: 700;">💾 Update
+                    Configuration</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. Advanced Settings & Tools (Collapsible Section) -->
+    <div style="margin-top: 30px;">
+        <button type="button" onclick="toggleAdvanced()"
+            style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: var(--card); border: 1px solid #e2e8f0; border-radius: 16px; cursor: pointer; transition: background 0.2s;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 1.4rem;">🛠️</span>
+                <div style="text-align: left;">
+                    <h3 style="margin: 0; color: #1e293b; font-size: 1.15rem;">Advanced Maintenance Tools</h3>
+                    <p style="margin: 2px 0 0; color: #64748b; font-size: 0.85rem;">High-impact system-wide operations
+                        and data integrity tools</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span
+                    style="background: #fee2e2; color: #ef4444; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; text-transform: uppercase;">Danger
+                    Zone Included</span>
+                <span id="advancedCaret" style="font-size: 1.2rem; transition: transform 0.3s;">▼</span>
+            </div>
+        </button>
+
+        <div id="advancedSection" style="display: none; padding-top: 25px; animation: slideDown 0.3s ease-out;">
+
+            <div class="section-card danger-zone"
+                style="background: #fffafa; border: 2px solid #fee2e2; border-radius: 16px; padding: 30px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                    <span style="font-size: 1.8rem;">🚩</span>
+                    <h2 style="color: #991b1b; margin: 0; font-size: 1.4rem;">System Danger Zone</h2>
+                </div>
+
+                <div style="display: grid; gap: 15px;">
+
+                    <!-- Archive -->
+                    <div class="danger-action-row"
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border: 1px solid #fee2e2; border-radius: 12px;">
+                        <div class="danger-info">
+                            <h4 style="margin: 0; color: #1e293b;">Auto-Archive All platform Content</h4>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #64748b;">Move all active notes to
+                                archive. Requires: <strong>ARCHIVE</strong></p>
+                        </div>
+                        <button onclick="openDangerModal('archive-notes', 'Mass Archive Platform Data', 'ARCHIVE')"
+                            style="padding: 10px 20px; background: #f97316; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">ARCHIVE</button>
+                    </div>
+
+                    <!-- Restore -->
+                    <div class="danger-action-row"
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border: 1px solid #dcfce7; border-radius: 12px;">
+                        <div class="danger-info">
+                            <h4 style="margin: 0; color: #1e293b;">Mass Restore archived Notes</h4>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #64748b;">Revert archives to previous
+                                status. Requires: <strong>RESTORE</strong></p>
+                        </div>
+                        <button onclick="openDangerModal('restore-notes', 'Mass Data Restoration', 'RESTORE')"
+                            style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">RESTORE</button>
+                    </div>
+
+                    <!-- Hard Delete -->
+                    <div class="danger-action-row"
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border: 2px solid #fee2e2; border-radius: 12px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);">
+                        <div class="danger-info">
+                            <h4 style="margin: 0; color: #b91c1c;">Permanently Delete Archives <span
+                                    style="font-size: 0.65rem; background: #991b1b; color: white; padding: 2px 6px; border-radius: 4px; margin-left:8px; vertical-align: middle;">SUPER
+                                    ADMIN ONLY</span></h4>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #64748b;">Hard delete from disk and
+                                DB. Requires: <strong>DELETE</strong></p>
+                        </div>
+                        <button onclick="openDangerModal('delete-notes', 'Permanent Content Liquidation', 'DELETE')"
+                            style="padding: 10px 20px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">DELETE</button>
+                    </div>
+
+                    <!-- Reset Reports -->
+                    <div class="danger-action-row"
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border: 1px solid #fee2e2; border-radius: 12px;">
+                        <div class="danger-info">
+                            <h4 style="margin: 0; color: #1e293b;">Wipe Moderation History</h4>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #64748b;">Clear all report data logs.
+                                Requires: <strong>RESET</strong></p>
+                        </div>
+                        <button onclick="openDangerModal('reset-reports', 'Moderation Data Reset', 'RESET')"
+                            style="padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">RESET</button>
+                    </div>
+
+                    <!-- Audit Logs -->
+                    <div class="danger-action-row"
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--card); border: 2px solid #fee2e2; border-radius: 12px;">
+                        <div class="danger-info">
+                            <h4 style="margin: 0; color: #b91c1c;">System Audit Log Purge <span
+                                    style="font-size: 0.65rem; background: #991b1b; color: white; padding: 2px 6px; border-radius: 4px; margin-left:8px; vertical-align: middle;">SUPER
+                                    ADMIN ONLY</span></h4>
+                            <p style="margin: 5px 0 0; font-size: 0.85rem; color: #64748b;">Wipe notification & system
+                                audit history. Requires: <strong>CLEAR</strong></p>
+                        </div>
+                        <button onclick="openDangerModal('clear-logs', 'Full Audit Log Purge', 'CLEAR')"
+                            style="padding: 10px 20px; background: #b91c1c; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">CLEAR</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Implementation Modal (Global Danger Gate) -->
+<div id="dangerModal" class="modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100000; justify-content: center; align-items: center; backdrop-filter: blur(8px);">
+    <div class="modal-content"
+        style="background: var(--card); width: 95%; max-width: 500px; padding: 40px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+        <h2 id="dangerActionTitle" style="color: #dc2626; margin: 0; font-size: 1.6rem; text-align: center;">Confirm
+            High-Risk Action</h2>
+        <p style="color: #4b5563; text-align: center; margin: 15px 0 30px; line-height: 1.5;">This operation is
+            irreversible. Please verify your administrative authorization to proceed.</p>
+
+        <form id="dangerForm" method="post" action="">
+            <div style="background: #fdf2f2; padding: 25px; border-radius: 16px; border: 1px solid #fecaca;">
+                <label
+                    style="display: block; font-size: 0.8rem; font-weight: 800; color: #991b1b; margin-bottom: 10px; text-transform: uppercase;">Verifier
+                    Password</label>
+                <input type="password" name="admin_password" required placeholder="••••••••"
+                    style="width: 100%; padding: 14px; border: 2px solid #fecaca; border-radius: 10px; margin-bottom: 25px; font-size: 1.1rem;">
+
+                <label
+                    style="display: block; font-size: 0.8rem; font-weight: 800; color: #991b1b; margin-bottom: 10px; text-transform: uppercase;">Type
+                    <span id="confirmKeywordDisplay"
+                        style="color: #dc2626; text-decoration: underline; font-size: 1rem;">KEYWORD</span> to
+                    execute</label>
+                <input type="text" name="confirm_text" id="confirmTextInput" required autocomplete="off"
+                    style="width: 100%; padding: 14px; border: 2px solid #fecaca; border-radius: 10px; font-family: monospace; font-weight: 900; font-size: 1.2rem; text-align: center; color: #b91c1c; text-transform: uppercase;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 35px;">
+                <button type="button" onclick="closeDangerModal()"
+                    style="padding: 16px; background: #f1f5f9; color: #475569; border: none; border-radius: 12px; font-weight: 700; cursor: pointer;">Abort
+                    Action</button>
+                <button type="submit"
+                    style="padding: 16px; background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer;">Authorize
+                    Execution</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Update toggle status label based on checkbox state
+    function updateToggleLabel(toggleId, statusId) {
+        const checkbox = document.getElementById(toggleId);
+        const statusEl = document.getElementById(statusId);
+        if (!statusEl) return;
+        if (checkbox.checked) {
+            statusEl.textContent = 'Enabled';
+            statusEl.style.background = '#dcfce7';
+            statusEl.style.color = '#16a34a';
+        } else {
+            statusEl.textContent = 'Disabled';
+            statusEl.style.background = '#fee2e2';
+            statusEl.style.color = '#dc2626';
+        }
+    }
+    // ===== File Type Chip Sync =====
+    function syncFileTypes() {
+        const checked = Array.from(
+            document.querySelectorAll('.filetype-chip input[type="checkbox"]:checked')
+        ).map(cb => cb.value);
+
+        document.getElementById('allowed_file_types_hidden').value = checked.join(',');
+
+        const preview = document.getElementById('active_ext_preview');
+        if (preview) preview.textContent = checked.length ? checked.join(', ') : 'none';
+
+        document.querySelectorAll('.filetype-chip').forEach(chip => {
+            const cb = chip.querySelector('input[type="checkbox"]');
+            chip.classList.toggle('active', cb.checked);
+        });
+    }
+    function toggleAdvanced() {
+        const section = document.getElementById('advancedSection');
+        const caret = document.getElementById('advancedCaret');
+        const isOpen = section.style.display === 'block';
+
+        section.style.display = isOpen ? 'none' : 'block';
+        caret.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+
+    function openDangerModal(actionType, actionTitle, keyword) {
+        const modal = document.getElementById('dangerModal');
+        const form = document.getElementById('dangerForm');
+        const title = document.getElementById('dangerActionTitle');
+        const confirmInput = document.getElementById('confirmTextInput');
+        const keywordDisplay = document.getElementById('confirmKeywordDisplay');
+
+        title.innerText = actionTitle;
+        confirmInput.value = '';
+        keywordDisplay.innerText = keyword.toUpperCase();
+        confirmInput.placeholder = 'Type ' + keyword.toUpperCase();
+
+        const actionMap = {
+            'archive-notes': '/admin/danger/archive-all-notes',
+            'restore-notes': '/admin/danger/restore-all-notes',
+            'delete-notes': '/admin/danger/delete-archived-notes',
+            'reset-reports': '/admin/danger/reset-reports',
+            'clear-logs': '/admin/danger/clear-audit-logs'
+        };
+
+        form.action = actionMap[actionType];
+        modal.style.display = 'flex';
+    }
+
+    function closeDangerModal() {
+        document.getElementById('dangerModal').style.display = 'none';
+    }
+
+    document.getElementById('dangerForm').onsubmit = function (e) {
+        const input = document.getElementById('confirmTextInput').value.trim().toUpperCase();
+        const required = document.getElementById('confirmKeywordDisplay').innerText.trim().toUpperCase();
+
+        if (input !== required) {
+            alert('Security mismatch. Typing \"' + required + '\" is mandatory for authorization.');
+            return false;
+        }
+        return true;
+    };
+</script>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #cbd5e1;
+        transition: 0.3s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: var(--card);
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    input:checked+label .slider {
+        background: #10b981;
+    }
+
+    input:checked+label .slider:before {
+        transform: translateX(20px);
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    /* ===== File Type Chip Selector ===== */
+    .filetype-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filetype-group-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .filetype-checkboxes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .filetype-chip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 13px;
+        border-radius: 8px;
+        border: 1.5px solid #cbd5e1;
+        background: var(--card);
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.18s ease;
+        user-select: none;
+    }
+
+    .filetype-chip:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #eff6ff;
+        transform: translateY(-1px);
+    }
+
+    .filetype-chip.active {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .chip-check {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #22c55e;
+        display: none;
+    }
+
+    .filetype-chip.active .chip-check {
+        display: inline;
+    }
+
+    [data-theme="dark"] .filetype-chip {
+        background: #1e293b;
+        border-color: #334155;
+        color: #94a3b8;
+    }
+
+    [data-theme="dark"] .filetype-chip:hover,
+    [data-theme="dark"] .filetype-chip.active {
+        background: #1e3a5f;
+        border-color: #3b82f6;
+        color: #93c5fd;
+    }
+</style>
+{% endblock %}

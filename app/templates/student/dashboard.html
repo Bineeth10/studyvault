@@ -1,0 +1,157 @@
+{% extends "student/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+{% if latest_announcement %}
+<div id="announcementBanner" class="announcement-banner" style="display:none;"
+    data-announcement-id="{{ latest_announcement._id }}">
+    <div class="announcement-content">
+        <span class="announcement-icon">📢</span>
+        <div class="announcement-text">
+            <h4>NEW: {{ latest_announcement.title }}</h4>
+            <p>{{ latest_announcement.message|default('') }}</p>
+            {% if latest_announcement.message and latest_announcement.message|length > 100 %}
+            <p>{{ latest_announcement.message[:100] }}...</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="announcement-actions">
+        <a href="/student/announcements" class="view-all-btn" onclick="hideBanner()">View All</a>
+        <button class="dismiss-btn" onclick="hideBanner()" title="Dismiss">✕</button>
+    </div>
+</div>
+{% endif %}
+
+<div class="dashboard-grid">
+    <!-- Stats Cards -->
+    <div class="stats-cards">
+        <a href="/student/my-notes" class="stat-card blue" style="text-decoration: none;">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+                <h3>{{ total_uploads }}</h3>
+                <p>Total Uploads</p>
+            </div>
+        </a>
+
+        <a href="/student/my-notes" class="stat-card green" style="text-decoration: none;">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <h3>{{ approved_notes }}</h3>
+                <p>Approved Notes</p>
+            </div>
+        </a>
+
+        <a href="/student/my-notes" class="stat-card orange" style="text-decoration: none;">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-info">
+                <h3>{{ pending_notes }}</h3>
+                <p>Pending Review</p>
+            </div>
+        </a>
+
+        <a href="/student/saved" class="stat-card red" style="text-decoration: none;">
+            <div class="stat-icon">❤️</div>
+            <div class="stat-info">
+                <h3>{{ saved_notes }}</h3>
+                <p>Saved Notes</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="section-card">
+        <h2>Recent Activity</h2>
+        <div class="activity-list">
+            {% if recent_activity %}
+            {% for activity in recent_activity %}
+            <div class="activity-item {% if not activity.is_read %}unread{% endif %}">
+                <div class="activity-icon">
+                    {% if activity.type | lower == 'upload' %}📤
+                    {% elif activity.type | lower == 'approval' %}✅
+                    {% elif activity.type | lower == 'rejection' %}❌
+                    {% elif activity.type | lower == 'message' %}💬
+                    {% elif activity.type | lower == 'forum_reply' %}💭
+                    {% elif activity.type | lower == 'warning' or activity.type | lower == 'report_alert' %}⚠️
+                    {% else %}🔔
+                    {% endif %}
+                </div>
+                <div class="activity-content">
+                    <p>{{ activity.message }}</p>
+                    <small>{{ activity.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="no-data">No recent activity</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-card">
+        <h2>Quick Actions</h2>
+        <div class="quick-actions">
+            <a href="/student/upload" class="action-btn primary">
+                <span class="icon">📤</span>
+                <span>Upload Notes</span>
+            </a>
+            <a href="/student/browse" class="action-btn secondary">
+                <span class="icon">🔍</span>
+                <span>Browse Notes</span>
+            </a>
+            <a href="/student/forum" class="action-btn tertiary">
+                <span class="icon">💭</span>
+                <span>Visit Forum</span>
+            </a>
+            <a href="/student/ai" class="action-btn quaternary">
+                <span class="icon">🤖</span>
+                <span>AI Assistant</span>
+            </a>
+            <a href="/student/faculty" class="action-btn" style="background: #11998e; color: white;">
+                <span class="icon">👨‍🏫</span>
+                <span>Faculty</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    (function () {
+        // Show the banner only if it hasn't been dismissed before
+        const banner = document.getElementById('announcementBanner');
+        if (!banner) return;
+
+        const announcementId = banner.dataset.announcementId;
+        const dismissedId = localStorage.getItem('dismissed_announcement_id');
+
+        if (dismissedId === announcementId) {
+            // Already dismissed — keep it hidden
+            banner.remove();
+        } else {
+            // New or un-dismissed announcement — slide it in
+            banner.style.display = '';
+        }
+    })();
+
+    function hideBanner() {
+        const banner = document.getElementById('announcementBanner');
+        if (!banner) return;
+
+        // Remember this announcement was dismissed
+        const announcementId = banner.dataset.announcementId;
+        if (announcementId) {
+            localStorage.setItem('dismissed_announcement_id', announcementId);
+        }
+
+        // Animate out
+        banner.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+        setTimeout(() => { banner.remove(); }, 300);
+    }
+</script>
+{% endblock %}

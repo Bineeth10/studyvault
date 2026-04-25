@@ -1,0 +1,106 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: radial-gradient(circle at top, #1b2a4a, #0b1324);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+}
+
+.auth-card {
+    width: 380px;
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.auth-card h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background: #0f172a;
+    color: white;
+}
+
+.form-group input::placeholder {
+    color: #94a3b8;
+}
+
+.btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    color: #ffffff;
+    margin-top: 10px;
+}
+
+.btn.secondary {
+    background: #334155;
+}
+
+.btn:hover {
+    opacity: 0.95;
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.auth-links a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+
+.role-buttons {
+    display: grid;
+    gap: 12px;
+}
+
+.role-buttons a {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    background: #334155;
+    text-decoration: none;
+    color: white;
+    font-weight: 500;
+}
+
+.role-buttons a:hover {
+    background: #475569;
+}

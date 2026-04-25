@@ -1,0 +1,190 @@
+@startuml StudyVault_DFD_Level1
+!pragma layout smetana
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam ArrowColor #2C3E50
+skinparam ArrowThickness 1.8
+skinparam ArrowFontSize 10
+skinparam ArrowFontColor #555555
+skinparam ArrowFontStyle bold
+
+' ─── External Entities ─────────────────────────────────────────────────────
+skinparam rectangle {
+  BackgroundColor #2980B9
+  BorderColor #1A5276
+  FontColor white
+  FontStyle bold
+  RoundCorner 12
+}
+
+' ─── Processes (circles/ovals) ─────────────────────────────────────────────
+skinparam usecase {
+  BackgroundColor #27AE60
+  BorderColor #1E8449
+  FontColor white
+  FontStyle bold
+}
+
+' ─── Data Stores ───────────────────────────────────────────────────────────
+skinparam database {
+  BackgroundColor #E67E22
+  BorderColor #CA6F1E
+  FontColor white
+  FontStyle bold
+}
+
+title \n<b>StudyVault – DFD Level 1\nOnline Notes Sharing Platform</b>\n
+
+' ════════════════════════════════════════════════════
+'  EXTERNAL ENTITIES
+' ════════════════════════════════════════════════════
+rectangle "Student" as EXT_STU
+rectangle "Faculty" as EXT_FAC
+rectangle "Admin" as EXT_ADM
+rectangle "Groq AI\n(LLaMA 3.1)" as EXT_AI
+
+' ════════════════════════════════════════════════════
+'  PROCESSES
+' ════════════════════════════════════════════════════
+usecase "P1\nAuthentication\n& Session\nManagement" as P1
+usecase "P2\nNote Upload\n& AI Safety\nAnalysis" as P2
+usecase "P3\nNote Review\n& Approval\nWorkflow" as P3
+usecase "P4\nNote Browsing,\nSearch &\nDownload" as P4
+usecase "P5\nAI Study\nTools\nProcessing" as P5
+usecase "P6\nMessaging\n& Notification\nSystem" as P6
+usecase "P7\nForum &\nAnnouncement\nManagement" as P7
+usecase "P8\nAdmin Control\n& System\nConfiguration" as P8
+usecase "P9\nContent\nModeration\n& Reports" as P9
+
+' ════════════════════════════════════════════════════
+'  DATA STORES
+' ════════════════════════════════════════════════════
+database "DS1\nUsers\nCollection" as DS1
+database "DS2\nNotes\nCollection" as DS2
+database "DS3\nNotifications\nCollection" as DS3
+database "DS4\nMessages\nCollection" as DS4
+database "DS5\nFavorites\nCollection" as DS5
+database "DS6\nReports\nCollection" as DS6
+database "DS7\nAnnouncements\nCollection" as DS7
+database "DS8\nForum Posts\nCollection" as DS8
+database "DS9\nSystem Settings\nCollection" as DS9
+database "DS10\nFile Storage\n(uploads/)" as DS10
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P1: Authentication
+' ════════════════════════════════════════════════════
+EXT_STU --> P1 : "Login Credentials\n(email, password, role)"
+EXT_FAC --> P1 : "Login Credentials\n(email, password, role)"
+EXT_ADM --> P1 : "Login Credentials\n(email, password)"
+P1 --> DS1 : "Query user record\n(email lookup)"
+DS1 --> P1 : "Hashed password,\nrole, is_active status"
+P1 --> EXT_STU : "Session Token +\nRole-based Dashboard"
+P1 --> EXT_FAC : "Session Token +\nRole-based Dashboard"
+P1 --> EXT_ADM : "Session Token +\nAdmin Dashboard"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P2: Note Upload & AI Safety Analysis
+' ════════════════════════════════════════════════════
+EXT_STU --> P2 : "File (PDF/DOCX/PPTX/Image),\ntitle, subject metadata"
+EXT_FAC --> P2 : "Faculty Note File,\ntitle, subject metadata"
+P2 --> DS10 : "Write file\n(user_id + timestamp + filename)"
+P2 --> EXT_AI : "Extracted text\n(≤4,000 chars) for\nsafety scan request"
+EXT_AI --> P2 : "Safety scores JSON\n(violation_type, scores,\nai_status, reason)"
+P2 --> DS2 : "Insert note record\n(status=pending,\nai_status, ai_scores)"
+P2 --> DS3 : "Write upload\nconfirmation notification"
+P2 --> EXT_STU : "Upload success +\nAI scan result feedback"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P3: Note Review & Approval
+' ════════════════════════════════════════════════════
+P3 --> DS2 : "Query pending notes\n(status filter)"
+DS2 --> P3 : "Pending note list\n(title, subject,\nuploader, ai_status)"
+EXT_FAC --> P3 : "Approve / Reject decision\n+ rejection reason"
+EXT_ADM --> P3 : "Approve / Reject /\nReturn / Warn action"
+P3 --> DS2 : "Update note status\n(approved / rejected /\nadmin_review / blocked)"
+P3 --> DS3 : "Write review outcome\nnotification to uploader"
+P3 --> EXT_FAC : "Updated approval\nqueue view"
+P3 --> EXT_ADM : "Confirm action +\nupdated note panel"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P4: Browse, Search & Download
+' ════════════════════════════════════════════════════
+EXT_STU --> P4 : "Browse / Search request\n(subject, keyword filter)\nor Download request"
+P4 --> DS2 : "Query approved notes\n(status=approved, subject)"
+DS2 --> P4 : "Approved note list\n(title, subject,\nuploader, preview URL)"
+P4 --> DS10 : "Retrieve file for\ndownload / preview"
+DS10 --> P4 : "File bytes\n(PDF / DOCX / image)"
+EXT_STU --> P4 : "Favorite toggle\n(note_id)"
+P4 --> DS5 : "Insert / delete\nfavorite record\n(user_id, note_id)"
+DS5 --> P4 : "Saved notes list"
+P4 --> EXT_STU : "Notes list / file download\n/ preview response"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P5: AI Study Tools
+' ════════════════════════════════════════════════════
+EXT_STU --> P5 : "AI tool request\n(type: summary / flashcards /\nQ&A / study-guide, input text)"
+P5 --> DS2 : "Fetch note text\n(if note_id provided)"
+DS2 --> P5 : "Stored note content /\nfile path"
+P5 --> DS10 : "Read file for\ntext extraction"
+DS10 --> P5 : "Raw file bytes"
+P5 --> EXT_AI : "Prompt + extracted text\n(tool type, user query)"
+EXT_AI --> P5 : "AI-generated output\n(summary bullets /\nflashcard JSON /\nQ&A answer / guide HTML)"
+P5 --> EXT_STU : "Formatted AI result\n(HTML / JSON)"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P6: Messaging & Notifications
+' ════════════════════════════════════════════════════
+EXT_STU --> P6 : "Send message\n(receiver_id, subject,\nmessage body)"
+EXT_FAC --> P6 : "Send message\n(receiver_id, subject,\nmessage body)"
+EXT_ADM --> P6 : "Broadcast message\n(target role / user_id)"
+P6 --> DS4 : "Insert message record\n(sender_id, receiver_id,\nsubject, body)"
+DS4 --> P6 : "Message thread /\ninbox records"
+P6 --> DS3 : "Write new message\nnotification"
+DS3 --> P6 : "Unread notification\ncount + recent list"
+P6 --> EXT_STU : "Inbox / chat thread\n+ unread count badge"
+P6 --> EXT_FAC : "Inbox / chat thread\n+ unread count badge"
+P6 --> EXT_ADM : "Message sent\nconfirmation"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P7: Forum & Announcements
+' ════════════════════════════════════════════════════
+EXT_STU --> P7 : "Forum post / reply\n(title, subject,\ncontent)"
+EXT_FAC --> P7 : "Forum reply or\nAnnouncement\n(title, content, audience)"
+EXT_ADM --> P7 : "Announcement\n(title, content, audience)"
+P7 --> DS8 : "Insert forum post /\nreply record"
+DS8 --> P7 : "Forum threads\n(posts + replies)"
+P7 --> DS7 : "Insert announcement\n(title, content,\nauthor_id, audience)"
+DS7 --> P7 : "Announcements list\n(audience-filtered)"
+P7 --> EXT_STU : "Forum view +\nAnnouncements feed"
+P7 --> EXT_FAC : "Forum view +\nPosted announcement"
+P7 --> EXT_ADM : "Announcement\npublished confirmation"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P8: Admin Control & Config
+' ════════════════════════════════════════════════════
+EXT_ADM --> P8 : "User management actions\n(toggle-status / delete /\ncleanup)"
+P8 --> DS1 : "Update user record\n(is_active, is_deleted)"
+DS1 --> P8 : "User list\n(name, email, role,\nstatus, created_at)"
+EXT_ADM --> P8 : "Settings update\n(registrations_enabled,\nai_enabled, max_upload_size,\nallowed_file_types)"
+P8 --> DS9 : "Write system\nsettings record"
+DS9 --> P8 : "Current settings\n(config values)"
+P8 --> DS2 : "Danger Zone:\narchive / restore /\ndelete notes"
+P8 --> DS3 : "Danger Zone:\nclear audit /\nnotification logs"
+P8 --> EXT_ADM : "Updated dashboard\nanalytics + confirmations"
+
+' ════════════════════════════════════════════════════
+'  DATA FLOWS — P9: Content Moderation & Reports
+' ════════════════════════════════════════════════════
+EXT_STU --> P9 : "Report submission\n(reported_item_id,\nreason)"
+P9 --> DS6 : "Insert report record\n(reporter_id,\nitem_id, reason)"
+DS6 --> P9 : "Open reports list\n(reason, status,\nreported note info)"
+EXT_ADM --> P9 : "Resolution action\n(delete / warn /\nno-action)"
+P9 --> DS2 : "Apply note action\n(block / warn_flag /\ndelete)"
+P9 --> DS6 : "Update report status\n(resolved_by,\nresolved_at)"
+P9 --> DS3 : "Write moderation\noutcome notification"
+P9 --> EXT_ADM : "Resolution confirmed\n+ updated report queue"
+P9 --> EXT_STU : "Report filed\nconfirmation"
+
+@enduml

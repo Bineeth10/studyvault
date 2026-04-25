@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Dashboard{% endblock %} - StudyVault</title>
+    <link rel="stylesheet" href="/static/css/student.css?v=1.1">
+    <link rel="stylesheet" href="/static/css/theme_toggle.css?v=1.1">
+</head>
+
+<body>
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                document.body.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🎓 StudyVault</h2>
+                <p class="user-role">Student</p>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/student/dashboard"
+                    class="nav-item {% if request.url.path == '/student/dashboard' %}active{% endif %}">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/student/upload"
+                    class="nav-item {% if request.url.path == '/student/upload' %}active{% endif %}">
+                    <span class="icon">📤</span>
+                    <span>Upload Notes</span>
+                </a>
+                <a href="/student/my-notes"
+                    class="nav-item {% if request.url.path == '/student/my-notes' %}active{% endif %}">
+                    <span class="icon">📝</span>
+                    <span>My Notes</span>
+                </a>
+                <a href="/student/browse"
+                    class="nav-item {% if request.url.path == '/student/browse' %}active{% endif %}">
+                    <span class="icon">🔍</span>
+                    <span>Browse Notes</span>
+                </a>
+                <a href="/student/saved"
+                    class="nav-item {% if request.url.path == '/student/saved' %}active{% endif %}">
+                    <span class="icon">❤️</span>
+                    <span>Favorites</span>
+                </a>
+                <a href="/student/messages"
+                    class="nav-item {% if request.url.path == '/student/messages' %}active{% endif %}">
+                    <span class="icon">💬</span>
+                    <span>Messages</span>
+                </a>
+                <a href="/student/faculty"
+                    class="nav-item {% if request.url.path == '/student/faculty' %}active{% endif %}">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty</span>
+                </a>
+                <a href="/student/forum"
+                    class="nav-item {% if request.url.path == '/student/forum' %}active{% endif %}">
+                    <span class="icon">💭</span>
+                    <span>Forum</span>
+                </a>
+                <a href="/student/ai" class="nav-item {% if request.url.path == '/student/ai' %}active{% endif %}">
+                    <span class="icon">🤖</span>
+                    <span>AI Assistant</span>
+                </a>
+                <a href="/student/announcements"
+                    class="nav-item {% if request.url.path == '/student/announcements' %}active{% endif %}">
+                    <span class="icon">📢</span>
+                    <span>Announcements</span>
+                </a>
+                <a href="/student/notifications"
+                    class="nav-item {% if request.url.path == '/student/notifications' %}active{% endif %}">
+                    <span class="icon">🔔</span>
+                    <span>Notifications</span>
+                </a>
+                <a href="/logout" class="nav-item logout">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle-btn" title="Toggle Theme">
+                        <span class="icon">🌙</span>
+                    </button>
+
+                    <!-- Notification Bell Trigger -->
+                    <div class="notification-trigger">
+                        <button class="bell-btn" id="bellBtn">
+                            <span>🔔</span>
+                            {% if unread_count > 0 %}
+                            <span class="unread-badge">{{ unread_count }}</span>
+                            {% endif %}
+                        </button>
+                    </div>
+
+                    <div class="user-profile">
+                        <span>Welcome, <strong>{{ user.name }}</strong></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Notification Side Panel (Drawer) -->
+    <div id="sideNotifPanel" class="side-notif-panel">
+        <div class="panel-overlay" id="panelOverlay"></div>
+        <div class="panel-content">
+            <div class="panel-header">
+                <h3>Notifications</h3>
+                <button class="close-panel" id="closePanel">✕</button>
+            </div>
+
+            <div class="panel-actions">
+                <button onclick="markAllRead()" class="mark-all-btn">✓ Mark all read</button>
+            </div>
+
+            <div class="notif-list">
+                {% if recent_notifications %}
+                {% for notif in recent_notifications %}
+                <div class="notif-item {% if not notif.is_read %}unread-item{% endif %}"
+                    onclick="markRead('{{ notif._id }}', this)">
+                    <div class="notif-icon-small">
+                        {% if notif.type | lower == 'upload' %}📤
+                        {% elif notif.type | lower == 'approval' %}✅
+                        {% elif notif.type | lower == 'rejection' %}❌
+                        {% elif notif.type | lower == 'message' %}💬
+                        {% elif notif.type | lower == 'forum_reply' %}💭
+                        {% elif notif.type | lower == 'warning' or notif.type | lower == 'report_alert' %}⚠️
+                        {% else %}🔔
+                        {% endif %}
+                    </div>
+                    <div class="notif-content">
+                        <p class="notif-title">{{ notif.title }}</p>
+                        <p class="notif-msg">{{ notif.message }}</p>
+                        <div class="notif-meta">
+                            <span class="notif-time notif-timestamp" data-utc="{{ notif.created_at | utc_iso }}"
+                                title="{{ notif.created_at | utc_iso }}">{{ notif.created_at | time_ago }}</span>
+                        </div>
+                    </div>
+                    {% if not notif.is_read %}
+                    <span class="unread-dot"></span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="notif-footer">
+                    <a href="/student/notifications" class="view-all-link">📋 View All Notifications</a>
+                </div>
+                {% else %}
+                <div class="notif-empty">
+                    <div class="empty-icon">✨</div>
+                    <p>All caught up!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/student.js"></script>
+    <script src="/static/js/theme_toggle.js"></script>
+    <script>
+        // ── UTC → Local time converter (notification bell drawer) ──────────
+        // Runs after DOM load to replace server-rendered UTC time_ago strings
+        // with the user's local time (e.g. "Apr 21, 2026, 08:00 AM" for IST).
+        function svFormatLocal(isoUtc) {
+            if (!isoUtc) return '';
+            const d = new Date(isoUtc);
+            if (isNaN(d.getTime())) return isoUtc;
+            const now = new Date();
+            const diffSec = (now - d) / 1000;
+            // Keep relative label for recent items; switch to absolute for older ones
+            if (diffSec < 60)  return 'just now';
+            if (diffSec < 3600) return Math.floor(diffSec / 60) + 'm ago';
+            if (diffSec < 86400) return Math.floor(diffSec / 3600) + 'h ago';
+            if (diffSec < 604800) return Math.floor(diffSec / 86400) + 'd ago';
+            return d.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.notif-timestamp[data-utc]').forEach(el => {
+                const s = svFormatLocal(el.getAttribute('data-utc'));
+                if (s) el.textContent = s;
+            });
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

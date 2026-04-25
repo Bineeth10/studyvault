@@ -1,0 +1,60 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Upload - Faculty{% endblock %}
+{% block page_title %}Upload Study Materials{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="section-card">
+        <h2>Upload New Material</h2>
+        <form action="/faculty/upload" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">Material Title</label>
+                <input type="text" id="title" name="title" class="form-control"
+                    placeholder="e.g. Introduction to Data Structures" required>
+            </div>
+
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject" class="form-control" required>
+                    <option value="">Select Subject</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="English">English</option>
+                    <option value="History">History</option>
+                    <option value="Economics">Economics</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="4"
+                    placeholder="Briefly describe what this material covers..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="file">Select File (PDF, DOC, PPT, IMG)</label>
+                <input type="file" id="file" name="file" class="form-control" required>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button type="submit" class="btn-primary">Upload & Approve</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="section-card info-card" style="background: #e1f5fe; border-left: 5px solid #03a9f4;">
+        <h3>💡 Faculty Guidelines</h3>
+        <ul style="margin-left: 20px; color: #01579b;">
+            <li style="margin-bottom: 10px;">Materials uploaded by faculty are <strong>automatically approved</strong>.
+            </li>
+            <li style="margin-bottom: 10px;">Ensure clarity in titles for students to find them easily.</li>
+            <li style="margin-bottom: 10px;">Large files might take a few moments to upload.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

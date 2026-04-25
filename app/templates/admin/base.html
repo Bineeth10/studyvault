@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - StudyVault</title>
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="stylesheet" href="/static/css/theme_toggle.css">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.body.classList.add('dark-mode');
+                document.body.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🛡️ StudyVault</h2>
+                <p class="user-role">Administrator</p>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/admin/dashboard"
+                    class="nav-item {% if request.url.path == '/admin/dashboard' %}active{% endif %}">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/users" class="nav-item {% if request.url.path == '/admin/users' %}active{% endif %}">
+                    <span class="icon">👥</span>
+                    <span>Manage Users</span>
+                </a>
+                <a href="/admin/notes" class="nav-item {% if request.url.path == '/admin/notes' %}active{% endif %}">
+                    <span class="icon">📝</span>
+                    <span>Manage Notes</span>
+                </a>
+                <a href="/admin/reports"
+                    class="nav-item {% if request.url.path == '/admin/reports' %}active{% endif %}">
+                    <span class="icon">⚠️</span>
+                    <span>Reports & Moderation</span>
+                </a>
+                <a href="/admin/announcements"
+                    class="nav-item {% if request.url.path == '/admin/announcements' %}active{% endif %}">
+                    <span class="icon">📢</span>
+                    <span>Announcements</span>
+                </a>
+                <a href="/admin/messages"
+                    class="nav-item {% if request.url.path == '/admin/messages' %}active{% endif %}">
+                    <span class="icon">💬</span>
+                    <span>Messages</span>
+                </a>
+                <a href="/admin/settings"
+                    class="nav-item {% if request.url.path == '/admin/settings' %}active{% endif %}">
+                    <span class="icon">⚙️</span>
+                    <span>System Settings</span>
+                </a>
+                <a href="/admin/notifications"
+                    class="nav-item {% if request.url.path == '/admin/notifications' %}active{% endif %}">
+                    <span class="icon">🔔</span>
+                    <span>Notifications</span>
+                </a>
+                <a href="/logout" class="nav-item logout">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <div class="nav-actions">
+                    <button id="themeToggle" class="theme-toggle-btn" title="Toggle Theme">
+                        <span class="icon">🌙</span>
+                    </button>
+
+                    <div class="user-profile">
+                        <span>Welcome, <strong>{{ user.name }}</strong></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/theme_toggle.js"></script>
+</body>
+
+</html>

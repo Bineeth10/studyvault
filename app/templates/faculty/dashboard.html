@@ -1,0 +1,122 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Dashboard - Faculty{% endblock %}
+{% block page_title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Stats Section -->
+    <div class="stats-cards">
+        <div class="stat-card blue">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+                <h3>{{ stats.my_uploads }}</h3>
+                <p>My Notes Uploaded</p>
+            </div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-info">
+                <h3>{{ stats.pending_approvals }}</h3>
+                <p>My Pending Reviews</p>
+            </div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">🏁</div>
+            <div class="stat-info">
+                <h3>{{ stats.monthly_completed }} <span style="font-size: 0.5em; font-weight: normal; color: #7f8c8d;">This Month</span></h3>
+                <p style="font-size: 0.8em; margin-top: 5px; color: #666;">Total: {{ stats.total_completed }} Reviews</p>
+                <p>My Completed Reviews</p>
+            </div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-info">
+                <h3>{{ stats.avg_time_sec | format_duration }}</h3>
+                <p>Avg Review Time</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Performance Insights -->
+    <div class="section-card"
+        style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); border: 1px solid #e0e7ff;">
+        <h3>🧠 Performance Insights (Actual Review Time)</h3>
+        <p class="subtitle" style="font-size: 0.85em; color: var(--muted); margin-bottom: 15px;">Calculated from the moment you
+            open a note preview to approval/rejection.</p>
+        <div class="grid-cards"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+            <div
+                style="padding: 15px; background: var(--card); border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center;">
+                <p style="font-size: 0.8em; color: #7f8c8d; text-transform: uppercase;">Total Time Spent</p>
+                <p style="font-size: 1.2em; font-weight: bold; color: #2c3e50;">{{ stats.total_time_sec |
+                    format_duration }}</p>
+            </div>
+            <div
+                style="padding: 15px; background: var(--card); border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center;">
+                <p style="font-size: 0.8em; color: #7f8c8d; text-transform: uppercase;">Fastest Review</p>
+                <p style="font-size: 1.2em; font-weight: bold; color: #27ae60;">{{ stats.fastest_sec | format_duration
+                    }}</p>
+            </div>
+            <div
+                style="padding: 15px; background: var(--card); border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center;">
+                <p style="font-size: 0.8em; color: #7f8c8d; text-transform: uppercase;">Slowest Review</p>
+                <p style="font-size: 1.2em; font-weight: bold; color: #e67e22;">{{ stats.slowest_sec | format_duration
+                    }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-card">
+        <h2>Quick Actions</h2>
+        <div class="quick-actions"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <a href="/faculty/upload" class="btn-primary" style="text-align: center;">📤 Upload Note</a>
+            <a href="/faculty/approvals" class="btn-primary" style="text-align: center; background: #e67e22;">✅ Review
+                Notes</a>
+            <a href="/faculty/announcements" class="btn-primary" style="text-align: center; background: #3498db;">📢 Add
+                Announcement</a>
+            <a href="/faculty/messages" class="btn-primary" style="text-align: center; background: #9b59b6;">💬 Message
+                Students</a>
+        </div>
+    </div>
+
+    <!-- Recent Submissions -->
+    <div class="section-card">
+        <h2>Recent Activity</h2>
+        <div class="table-container">
+            {% if recent_notes %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Uploader</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in recent_notes %}
+                    <tr>
+                        <td>{{ note.title }}</td>
+                        <td>{{ note.uploader_name }}</td>
+                        <td>{{ note.uploader_role|capitalize }}</td>
+                        <td>
+                            <span class="badge badge-{{ note.status }}">
+                                {{ note.status|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ (note.reviewed_at or note.uploaded_at).strftime('%b %d, %Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No recent activity found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Reports & Moderation{% endblock %}
+{% block page_title %}Reports & Moderation{% endblock %}
+
+{% block content %}
+<div class="section-card">
+    <h2>⚠️ Reports & Moderation</h2>
+    <p class="subtitle">Review and take action on user-reported content</p>
+
+    <!-- Filter Controls (Standardized & Responsive) -->
+    <div class="moderation-filter-bar">
+        <form method="get" action="/admin/reports" style="display: contents;">
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status" onchange="this.form.submit()" class="filter-select">
+                    <option value="all" {% if selected_status=='all' %}selected{% endif %}>All Statuses</option>
+                    <option value="open" {% if selected_status=='open' %}selected{% endif %}>Open & Under Review
+                    </option>
+                    <option value="resolved" {% if selected_status=='resolved' %}selected{% endif %}>Resolved & Closed
+                    </option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Violation Type</label>
+                <select name="reason" onchange="this.form.submit()" class="filter-select">
+                    <option value="all" {% if selected_reason=='all' %}selected{% endif %}>All Reasons</option>
+                    {% for r in reasons %}
+                    <option value="{{ r }}" {% if selected_reason==r %}selected{% endif %}>{{ r }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group filter-buttons">
+                <button type="submit" class="btn-filter">🔍 Filter</button>
+                <a href="/admin/reports" class="btn-reset">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Reports Table -->
+    {% if all_reports %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Reporter</th>
+                    <th>Item Type</th>
+                    <th>Item Title</th>
+                    <th>Reason</th>
+                    <th>Reported On</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in all_reports %}
+                <tr
+                    class="{% if report.status == 'Open' or report.status == 'open' or report.status == 'Under Review' %}report-open{% endif %}">
+                    <td>{{ report.reporter_name }}</td>
+                    <td>
+                        <span class="badge badge-{{ report.item_type }}">
+                            {{ report.item_type | capitalize }}
+                        </span>
+                    </td>
+                    <td>{{ report.item_title }}</td>
+                    <td><strong>{{ report.reason }}</strong></td>
+                    <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') if report.created_at else 'N/A' }}</td>
+                    <td>
+                        <span class="badge badge-{{ report.status.replace(' ', '-') }}">
+                            {{ report.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if report.status == 'Open' or report.status == 'open' or report.status == 'Under Review' %}
+                        <div class="action-buttons">
+                            <!-- Delete Content -->
+                            <form method="post" action="/admin/reports/resolve" style="display: inline;"
+                                onsubmit="return confirm('Block the reported content and close this report?')">
+                                <input type="hidden" name="report_id" value="{{ report._id }}">
+                                <input type="hidden" name="action" value="delete_content">
+                                <button type="submit" class="btn-action btn-danger">🚫 Block Content</button>
+                            </form>
+
+                            <!-- Warning Only -->
+                            <form method="post" action="/admin/reports/resolve" style="display: inline;">
+                                <input type="hidden" name="report_id" value="{{ report._id }}">
+                                <input type="hidden" name="action" value="warning">
+                                <button type="submit" class="btn-action btn-warning">⚠️ Warning</button>
+                            </form>
+
+                            <!-- No Action -->
+                            <form method="post" action="/admin/reports/resolve" style="display: inline;">
+                                <input type="hidden" name="report_id" value="{{ report._id }}">
+                                <input type="hidden" name="action" value="no_action">
+                                <button type="submit" class="btn-action btn-secondary">✓ No Action</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">
+                            {{ report.status }}
+                        </span>
+                        {% if report.admin_action %}
+                        <br><small style="color: #7f8c8d; font-size: 0.82em;">✅ {{ report.admin_action }}</small>
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data-state">
+        <div class="no-data-icon">✅</div>
+        <h3>No Reports</h3>
+        <p>There are currently no reports to review. Great job!</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Report Statistics -->
+<div class="section-card">
+    <h2>📊 Report Statistics</h2>
+    <div class="stats-mini">
+        <div class="stat-item">
+            <strong>{{ total_stats.total }}</strong>
+            <span>Total Reports</span>
+        </div>
+        <div class="stat-item">
+            <strong>{{ total_stats.open }}</strong>
+            <span>Open Reports</span>
+        </div>
+        <div class="stat-item">
+            <strong>{{ total_stats.resolved }}</strong>
+            <span>Resolved</span>
+        </div>
+        <div class="stat-item" style="border-left: 2px solid #3498db; padding-left: 20px;">
+            <strong style="color: #3498db;">{{ all_reports | length }}</strong>
+            <span style="color: #3498db;">Matching Filters</span>
+        </div>
+    </div>
+</div>
+
+<!-- How Reports Work -->
+<div class="section-card info-card">
+    <h3>ℹ️ How Reports Work</h3>
+    <ul>
+        <li><strong>🚫 Block Content:</strong> Hides the reported item from public view and notifies the user of a
+            violation.</li>
+        <li><strong>⚠️ Warning:</strong> Sends a formal warning to the content owner; content remains visible.</li>
+        <li><strong>✓ No Action:</strong> Dismisses the report as invalid; no penalty is applied.</li>
+    </ul>
+</div>
+{% endblock %}

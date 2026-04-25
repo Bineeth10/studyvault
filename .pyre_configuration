@@ -1,0 +1,24 @@
+{
+  "source_directories": [
+    "."
+  ],
+  "search_path": [
+    "C:/Users/Lenovo/studyvault/venv/Lib/site-packages"
+  ],
+  "python_version": "3.11",
+  "strict": false,
+  "ignore_all_errors": [
+    ".",
+    "app",
+    "app/routes",
+    "app/models",
+    "app/templates",
+    "tmp"
+  ],
+  "exclude": [
+    ".*",
+    "app/.*",
+    "tmp/.*",
+    "venv/.*"
+  ]
+}

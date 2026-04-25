@@ -1,0 +1,159 @@
+{% extends "faculty/base.html" %}
+
+{% block title %}Academic Forum - Faculty{% endblock %}
+{% block page_title %}Academic Forum{% endblock %}
+
+{% block content %}
+<style>
+    .author-name.faculty { color: #11998e; }
+    .author-name.student { color: #1e293b; }
+</style>
+<div class="forum-container">
+    <div class="section-card">
+        <div class="forum-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <h2>💭 Knowledge Exchange</h2>
+                <p style="color: #64748b;">Share insights, answer student queries, and start academic discussions.</p>
+            </div>
+            <button class="btn-primary" onclick="showNewPostForm()" style="background: #11998e;">+ Create
+                Discussion</button>
+        </div>
+
+        <!-- New Post Form -->
+        <div id="newPostForm" class="new-post-form"
+            style="display: none; background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
+            <h3>Start a New Discussion</h3>
+            <form action="/faculty/forum/post" method="POST">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Title</label>
+                    <input type="text" name="title" class="form-control" required
+                        placeholder="e.g. Advanced Research Methodologies in AI">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Subject</label>
+                    <select name="subject" class="form-control" required>
+                        <option value="">Select Subject</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Biology">Biology</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Business">Business</option>
+                        <option value="Literature">Literature</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Content</label>
+                    <textarea name="content" class="form-control" rows="5" required
+                        placeholder="Share your thoughts or ask a challenging question..."></textarea>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <button type="submit" class="btn-primary" style="background: #11998e;">Post Discussion</button>
+                    <button type="button" class="btn-secondary" onclick="hideNewPostForm()"
+                        style="background: #94a3b8; border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Posts List -->
+        {% if posts %}
+        <div class="posts-list" style="display: flex; flex-direction: column; gap: 25px;">
+            {% for post in posts %}
+            <div class="post-card"
+                style="border: 1px solid #e2e8f0; border-radius: 15px; padding: 25px; background: var(--card);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <h3 style="margin: 0; color: #1e293b; font-size: 1.3em;">{{ post.title }}</h3>
+                    <span
+                        style="background: #e6fffa; color: #11998e; padding: 4px 12px; border-radius: 12px; font-size: 0.85em; font-weight: 600;">{{
+                        post.subject }}</span>
+                </div>
+                <div style="font-size: 0.85em; color: #64748b; margin-bottom: 15px;">
+                    <span>Posted by <strong>{{ post.author_name }}</strong></span>
+                    <span style="margin: 0 8px;">•</span>
+                    <span>{{ post.created_at.strftime('%b %d, %Y') }}</span>
+                    <span style="margin: 0 8px;">•</span>
+                    <span>{{ post.replies|length }} replies</span>
+                </div>
+                <div style="color: #475569; line-height: 1.6; margin-bottom: 20px;">
+                    {{ post.content }}
+                </div>
+
+                <!-- Replies -->
+                {% if post.replies %}
+                <div style="background: var(--card); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                    <h4
+                        style="margin: 0 0 15px 0; font-size: 0.9em; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Discussion Thread:</h4>
+                    {% for reply in post.replies %}
+                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <strong class="author-name {{ reply.author_role }}" style="font-size: 0.9em;">
+                                {{ reply.author_name }} {% if reply.author_role == 'faculty' %}(Faculty){% endif %}
+                            </strong>
+                            <small style="color: #94a3b8;">{{ reply.created_at.strftime('%m/%d %I:%M %p') }}</small>
+                        </div>
+                        <p style="margin: 0; color: #475569; font-size: 0.95em;">{{ reply.content }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Reply Form -->
+                <div class="reply-form">
+                    <form onsubmit="submitReply(event, '{{ post._id }}')" style="display: flex; gap: 10px;">
+                        <input type="text" name="reply" placeholder="Write a supportive reply..." required
+                            class="form-control" style="flex: 1;">
+                        <button type="submit" class="btn-primary" style="background: #11998e; padding: 10px 20px;">Post
+                            Reply</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 60px;">
+            <div style="font-size: 60px; margin-bottom: 20px;">💭</div>
+            <h3>No forum posts yet</h3>
+            <p>The academic forum is empty. Start the first discussion!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showNewPostForm() {
+        document.getElementById('newPostForm').style.display = 'block';
+    }
+
+    function hideNewPostForm() {
+        document.getElementById('newPostForm').style.display = 'none';
+    }
+
+    async function submitReply(event, postId) {
+        event.preventDefault();
+        const form = event.target;
+        const replyInput = form.querySelector('input[name="reply"]');
+        const reply = replyInput.value;
+
+        try {
+            const formData = new FormData();
+            formData.append('reply', reply);
+
+            const response = await fetch(`/faculty/forum/reply/${postId}`, {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            });
+
+            if (response.ok) {
+                location.reload();
+            }
+        } catch (error) {
+            console.error('Error posting reply:', error);
+            alert('Could not post reply. Check connection.');
+        }
+    }
+</script>
+{% endblock %}
